@@ -1,0 +1,53 @@
+\section{IDEA AND CAR EXPERIMENT}
+
+We focus on the importance of \textit{value distribution}, the distribution of the random return received by a RL
+agent, in contrast to the common approach in RL of modelling the expectation of this return.
+The latter neither takes int account the variability of the cost (i.e fluctuations around the mean), nor its sensitivity to modeling errors. \cite{Chow2015}
+
+We aim to learn this distribution and try to minimize other metrics rather than its mean, which can be crucial for some environments 
+in which ensuring that the cost is always above a certain value with certain probability is crucial.
+
+A metric that has recently gained a lot of popularity is the Conditional Value at Risk, eg in finance, due to its favorable computation properties 
+and superior ability to safeguard a decision maker from the "outcomes that hurt the most" \cite{Serraino2013}
+
+\subsection{Conditional Value-at-Risk (CVaR)}
+
+Let Z be a bounded-mean random variable, i.e $\mathbb E[|Z|] < \infty$, on a probability space $(\Omega, \mathbb F, \mathbb P)$, with cumulative distribution
+function $F(z) = \mathbb P (Z \leq z)$. We interpret Z as a reward.
+The value-at-risk (VaR) at confidence level $\alpha \in (0,1) $ is the $\alpha$ quantile of Z, i.e, 
+$\text{VaR}_\alpha (Z) = \inf \{ z \hspace{1mm} | \hspace{1mm}F(z) \geq  \alpha  \}$.
+The conditional value-at-risk (CVaR) at confidence level $\alpha \in (0,1) $ is defined as
+the expected reward of outcomes worse than the $\alpha$-quantile ($\text{VaR}_\alpha$):
+\begin{equation}
+    \text{CVaR}_\alpha (Z) = \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\beta) d\beta=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\beta (Z) d\beta
+ \end{equation}
+
+ Rockafellar and Uryasev \cite{Rockafellar2000} also showed that CVaR is equivalent to the solution of
+ the following optimization problem:
+
+\begin{equation}
+    \text{CVaR}_\alpha (Z) = \underset{\nu} \min \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\}
+\end{equation}
+
+where $(x)^- = \min(x,0)$. In the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.
+
+A useful property of CVaR, is its alternative dual representation \cite{Artzner1999}:
+
+\begin{equation}
+    \text{CVaR}_\alpha (Z) = \underset{\xi \in U_{\text{CVaR}} (\alpha, \mathbb{P})} \min \mathbb E_\xi[Z]
+\end{equation}
+
+where $\mathbb E_\xi[Z]$ denotes the $\xi$-weighted expectation of Z, and the risk envelope $U_\text{CVaR}$ is
+given by:
+
+\begin{equation}
+    U_{\text{CVaR}}(\alpha, \mathbb{P}) = \Big\{\xi | \xi(w)  \in \big [ 0, \frac{1}{\alpha} \int_{w\in\Omega} \xi(w)\mathbb{P}(w)dw=1   \big ] \Big\}
+\end{equation}
+
+Thus, the CVaR of a random variable may be interpreted as the worst case expectation of Z, under
+a perturbed distribution $\xi \mathbb{P}$.
+
+
+
+
+

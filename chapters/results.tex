@@ -61,9 +61,15 @@ The CVAR algorithm reaches its maximum CVAR of 64.0 at episode 220, whereas the 
 \textbf{Important issue}: Although CVAR-DDPG finds a risk-sensitive trajectory at episode 220, it doesn't converge there and keeps oscillating and even moves towards a risk-neutral behaviour later on.\\
 The graph in figure \ref{tail_CDF_EVOL} , shows the evolution of the sampled mean of the tail of the sampled cumulative value distribution (CDF). (ie we compute via IQN the quantile values from the tail value distribution (VD) and take the mean).
 The value it converges to coincides with the maximum value of the CVAR we achieved ,but then the actor doesn't seem to behave accordingly.\\
-However I am now thinking maybe computing the mean of the tail of the \textbf{CDF} and trying to push the actor to maximize it, it is not the best approach since, it is not the mean of the tail of the \textbf{CDF} what we aim to, but the mean of the tail of the VD. What do you think?
 
 
+\begin{equation}
+        \text{CVaR}_\alpha (Z) = \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\tau) d\tau=\frac{1}{\alpha} \int_{0}^{\alpha} IQN(\tau) d\tau \approx 
+        \frac{1}{\alpha} \frac{1}{K}\sum_{i=0}^K IQN(\tau_i) 
+\end{equation}
+where $\tau_i \sim U[0,\alpha]$, and IQN is the output of the IQN network for given $\tau$, representing the
+value of the return for the given quantile.\\
+(Values of the sampled CVAR showed in \ref{tail_CDF_EVOL} are not divided by $\alpha$ neither K )
 \begin{figure}[ht]
         \centering
         \includegraphics[width=0.8\textwidth]{images/DDPG/Trajectory_DDPG_ppenal02.pdf}

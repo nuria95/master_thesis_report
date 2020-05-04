@@ -117,7 +117,7 @@ between distributions $U $ and $Y $ is given by:
 
 where for a random variable Y, the inverse CDF $F_Y^{-1}$ of Y is defined by:
 \begin{equation}
-    F_Y^{-1}(w) := \text{inf} \big\{ y \in \mathbb{R} \; | w \; \leq   F_Y(w)    \big\}
+    F_Y^{-1}(w) \coloneqq \text{inf} \big\{ y \in \mathbb{R} \; | w \; \leq   F_Y(w)    \big\}
 \end{equation}
 where $F_Y(w) = Pr(y \leq Y)$. \\
 \todo{Add Figure 2.1 in \cite{Dabney2018}}
@@ -138,13 +138,13 @@ Let $\mathcal{Z}$  be the space of action-value distributions:
 Then, for two action-value distribution $Z_1, Z_2 \in \mathcal{Z}$, the maximal form of the 
 Wasserstein metric is defined by:
 \begin{equation}
-    \hat{d}_p(Z_1,Z_2) := \underset{x,a} {\text{sup}}  \;W_p(Z_1(x,a),Z_2(x,a))
+    \hat{d}_p(Z_1,Z_2) \coloneqq \underset{x,a} {\text{sup}}  \;W_p(Z_1(x,a),Z_2(x,a))
 \end{equation}
 
 \cite{Bellemare2017} showed that $\hat{d}_p$ is a metric over value distributions
 and furthermore, the distributional
 Bellman operator $T^\pi$ is a contraction in $\hat{d}_p$.
-Consider the process $Z_{k+1} := T^\pi Z_{k}$, starting with some $Z_{0} \in \mathcal{Z}$. \\
+Consider the process $Z_{k+1} \coloneqq T^\pi Z_{k}$, starting with some $Z_{0} \in \mathcal{Z}$. \\
 $T^\pi Z: \mathcal{Z} $ \ra $\mathcal{Z}$ is a $\gamma$-contraction in the Wasserstein
 metric $\hat{d}_p$, which implies that 
 not only the first moment (expectation) converges exponentially to $ Q^\pi$, but also in
@@ -180,14 +180,14 @@ Let $\Pi^*$ be the set of optimal policies.\\
 \textbf{Definition 1:} 
 An optimal value distribution is the value distribution of an optimal policy. The set of optimal value distributions is 
 \begin{equation*}
-    \mathcal{Z^*} := \big\{ Z^{\pi^*} | \pi^{*} \in  \Pi^*   \big\}
+    \mathcal{Z^*} \coloneqq \big\{ Z^{\pi^*} | \pi^{*} \in  \Pi^*   \big\}
 \end{equation*}
 Not all value distributions with expectation $Q^*$ are optimal, but they must match the full distribution of the return
 under some optimal policy.
 \textbf{Definition 2:} 
 A greedy policy $\pi$ for Z $in \mathcal{Z}$ maximizes the expectation of Z. The set of greedy policies for Z is:
 \begin{equation*}
-    \mathcal{G_Z} := \big\{ \pi  \; | \sum_a \pi(a|x) \mathbb E (Z(x,a) = \underset{a'\in \mathcal{A}}{\text{max}}  \; Q(x',a')   \big\}
+    \mathcal{G_Z} \coloneqq \big\{ \pi  \; | \sum_a \pi(a|x) \mathbb E (Z(x,a) = \underset{a'\in \mathcal{A}}{\text{max}}  \; Q(x',a')   \big\}
 \end{equation*}
 
 We will call a \textit{distributional Bellman optimality operator} any operator $\mathcal{T}$ which implements a greedy selection
@@ -204,7 +204,7 @@ Lemma 4 in \cite{Bellemare2017} shows that $\mathbb E Z_k$ behaves as expected:
 \end{equation*}
 and in particular $\mathbb E Z_1 \ra Q^* $ exponentially  quickly.
 However, $Z_k$ is not assured to converge to a fixed point.
-Specificially, they provide a number of negative results concerning $\mathcal{T}$:
+Specifically, they provide a number of negative results concerning $\mathcal{T}$:
 
 \textbf{Proposition 1}: The operator $\mathcal{T}$ is not a contraction.\\
 \textbf{Proposition 2}: Not all optimality operators have a fixed point $Z^* = \mathcal{T}Z^*$
@@ -215,28 +215,72 @@ Another result, shows that we cannot in general minimize the Wasserstein metric,
 viewed as a loss, using stochastic gradient descent methods. This limitation, is crucial
 in a practical context, when the value distribution needs to be approximated.
 
-\subsection{Quantile approximatio}
-\cite{Dabney2018} used the theory of quantile regression \cite{koenker_2005}, to
+\subsection{Quantile approximation}
+\cite{Dabney2018} used the theory of quantile regression \cite{koenker2001}, to
 design an algorithm applicable in a stochastic approximation setting.
 Quantile regression is used to estimate the quantile function at precisely chosen points.
 Then the Bellman update is applied onto this parameterized quantile distribution.
 This combined operator is proven to be a contraction and the estimated quantile function
 is shown to converge to the true value distribution when minimized using stochastic approximation.
+
+\subsection{Quantile projection:}
+Our current aim is to estimate quantiles of the target distribution, ie the values 
+of the return that divide the value distribution in equally sized parts.
+We will call it a quantile distribution,
+and we will let $\mathcal{Z_Q}$ be the space of quantile distributions.
+We denote the cumulative probabilities associated with such a distribution by $\tau_1,\tau_2...\tau_N$,
+so that $\tau_i=\frac{i}{N}$ for $i=1,...N$.\\
+Formally, let $\theta : \mathcal{X} \times \mathcal{A} \ra \mathbb R^N $ be some parametric model.
+A quantile distribution $Z_\theta \in \mathcal{Z_Q}$ maps each state-action pair (x,a) to a uniform
+probability distribution supported on $\{\theta_i(x,a)  \}$. Hence we can approximate it by a 
+uniform mixture of N Diracs:
+\begin{equation}
+    Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}
+\end{equation}
+with each $\theta_i$ assigned a fixed quantile.
+We aim to learn the support of these Diracs, i.e learn $\theta_i \forall i, a, x$.
+We will do it by quantifying the projection of an arbitrary value distribution $Z \in \mathcal{Z}$
+onto $\mathcal{Z_Q}$, that is:
+
+\begin{equation}
+    \prod_ {W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta) \label{eq:discrete_pdf}
+\end{equation}
+\todo{get the W1 next to the prod not below}
+This projection $\prod_ {W_1}$ is the quantile projection.\\
+We can quantify the projection between a distribution with bounded first moment Y and U, a uniform distribution
+over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta_N\}$ by:
+
+\begin{equation}
+    W_1(Y,U)= \sum_{i=1}^{N}\int_{\tau_{i-1}}^{\tau_i} |   F_Y^{-1}(w)-\theta_i   |dw
+\end{equation}
+
+Lemma 2 in \cite{Dabney2018} establishes that the values $\{\theta_1, ... \theta_N\}$ for the returns  that minimize 
+$W_Y(Y,U)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$, where $\hat\tau_i=\frac{\tau_{i-1}+\tau_i}{2}$.
+
 \subsection{Quantile Regression}
 Quantile regression is a method for approximating quantile functions of distributions.
 The quantile regression loss, for quantile $\tau \in [0,1]$, is an asymmetric convex lox function
 that penalizes underestimation errors with weight $\tau$ and overestimation errors
-with weight $1-\tau$. 
+with weight $1-\tau$. \\
 For a distribution Z, and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
 may be characterized as the minimizer of the quantile regression loss:
 \begin{eqnarray}
     \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ]\\
-    h
+    \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \label{eq:quantile_loss}
 \end{eqnarray}
+Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and using Lemma 2 in \cite{Dabney2018},
+which claims that the values of $\{\theta_1, ... \theta_N\}$ that minimize
+ $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$; we can claim that
+ the values of $\{\theta_1, ... \theta_N\}$ are the minimizers of the following objective:
 
+\begin{equation}
+    \sum_{i=1}^{N} \mathbb E_{\hat{Z} \sim Z} [ \rho_{\hat\tau_i}(\hat{Z}-\theta_i)]
+\end{equation}
 
+This loss gives unbiased sample gradients and hence, we can find the minimizing $\{\theta_1, ... \theta_N\}$
+by stochastic gradient descent.
 
-
+\todo{add huberloss}
 
 
 \begin{figure}[ht]
@@ -244,9 +288,29 @@ may be characterized as the minimizer of the quantile regression loss:
     \includegraphics[width=0.8\textwidth]{images/quantile_loss.pdf}
     \caption{Car trajectory using DDPG algorithm and velocity penalization with
     probability P=0.2}
-    \label{traj_ddpg_probpenal0.2}
+    \label{quantile_loss}
 
 \end{figure}
 
+Proposition 2 in \cite{Dabney2018} states that the combined quantile projection 
+$\prod_{W_1}$ with the Bellman update $\mathcal{T}^\pi$ has a unique fixed point $\hat{Z}^\pi$, and the repeated application
+of this operator, or its stochastic approximation, converges to $\hat{Z}^\pi$.
 
+\subsection{Quantile Regression Temporal Difference Learning}
+Temporal difference learning updates the estimated value function with a single unbiased 
+saple following policy $\pi$.
+Quantile regression allows to improve the estimate of the quantile function for some target
+distribution Y(x), by observing samples $y\sim Y(x)$ and minimizing equation \eqref{eq:quantile_loss}.
+Using the quantile regression loss, we can obtain an approximation with minimal 1-Wasserstein distance
+from the original.
+We can combine this with the distributional Bellman operator to give a target distribution
+for quantile regression, creating the quantile regression temporal differnce learning algorithm:
 
+\begin{eqnarray}
+    u=r+\gamma z' - \theta_i(x)\\
+    \theta_i(x) \la \theta_i(x) + \alpha (\hat\tau_i - \delta_{u<0})\\
+    a \backsim \pi(\cdot |x) , r \backsim R(x,a), x'\backsim P(\cdot |x,a), z' \backsim Z_\theta(x')
+\end{eqnarray}
+
+where $Z_\theta$ is a quantile distribution as in \eqref{eq:discrete_pdf} and $\theta_i(x)$ 
+is the estimated value of $F_{Z^\pi(x)}^{-1}(\hat\tau_i)$ in state x.

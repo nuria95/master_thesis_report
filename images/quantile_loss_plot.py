@@ -16,7 +16,7 @@ def quantile_plot(q):
     quantile_loss2 = np.maximum(q * error, (q - 1) * error)
     # print(quantile_loss)
     plt.figure(1)
-    plt.plot(error,quantile_loss, label=f'q={q}')
+    plt.plot(error,quantile_loss, label=rf'$\tau$={q}')
     plt.legend()
 
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     for q in [0.25, 0.5, 0.75, 0.9]:
         quantile_plot(q=q)
     plt.title('Quantile loss')
-    plt.xlabel(r'$y_{true}-y_{predict}$')
+    plt.xlabel('Residual')
     plt.ylabel('Loss')
     plt.xticks(np.arange(-1, 1.5, step=0.5))
     plt.show()

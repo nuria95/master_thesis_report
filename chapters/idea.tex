@@ -21,6 +21,22 @@ where
 is the distribution over returns.
 
 
+We first red ourselves of the deterministic policy gradient theorem \cite{silver2014}:\\
+Consider a determinstic policy $\mu_\theta(s): \mathcal{S}\ra \mathcal{A}$ with parameter
+vector $\theta \in \mathcal{R}^n$.
+We define: $G_T^\gamma = \sum_{k=0}^\infty \gamma^k r(x_k,a_k)$\\
+We define a performance objective $J(\mu_\theta) = \mathbb E[G_T | \mu_{\theta_{policy}}, x_0)]$
+We denote density 
+
+
+
+
+
+
+
+
+
+
 \begin{equation}
     \underset{\theta_{policy}} \min  \underset{\nu} \min \big\{\nu + \frac{1}{1-\alpha} \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]\big\}
 \end{equation}
@@ -28,23 +44,23 @@ is the distribution over returns.
 \vspace{0.5cm}
 SKETCH:
 
-\textbf{1) Act} using deterministic policy + exploration noise. Save in memory replay (s,a,r,s')\newline
-
-\textbf{2) Learn critic:} ie $Z^\theta (x_0,\mu_{\theta_{policy}})$ OFFLINE via IQN: \newline
+1) \textbf{Act:} using deterministic policy $+$ exploration noise. Save in memory replay (s,a,r,s')\newline
+\textbf{2) Learn critic:} ie $Z^\theta (x_0,\mu_{\theta_{policy}})$ OFFLINE via IQN:\newline
 Batch replay (s,a,r,s').
 \begin{eqnarray}
-    Z(s,a | \tau, \theta_{currentcritic})  \\
-    Z(s',\mu_{\theta_{targetpolicy}}(s') | \tau, \theta_{targetcritic}) + r  \\
+    Z(s,a | \tau, \theta_{currentcritic}) 
+    Z(s',\mu_{\theta_{targetpolicy}}(s') | \tau, \theta_{targetcritic}) + r 
 \end{eqnarray}
-where $\tau  \sim U[0,1]$ (same or different for Z and Z'?)\\
+
+where $\tau  \sim U[0,1]$ (same or different for Z and Z'?)
         
 Update via gradient descent $\theta_{currentcritic}$ using quantile regression loss.
-From time to time update parameters of $\theta_{targetcritic}$ \newpage
+From time to time update parameters of $\theta_{targetcritic}$ 
 
 Issue: having continuous actions requires action to be passed as an input to the IQN network.
 (In the IQN paper they deal with discrete actions only so IQN outputs the value of the quantile per every action.)
-In our case: embed action input withwith state and quantile inputs with some operation (Hadamard product?)
-\newline
+In our case: embed action input with state and quantile inputs with some operation (Hadamard product?)
+
 
 
 
@@ -55,27 +71,28 @@ In our case: embed action input withwith state and quantile inputs with some ope
     \underset{\theta_{policy}} \min  \underset{\nu} \min \big\{\nu + \frac{1}{1-\alpha} \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]\big\}
  \end{equation}
 
-To be discussed: Seee next for updates\\
+To be discussed: See next for updates
 My idea:
-Fix $\nu$, and learn it separately.\\
+Fix $\nu$, and learn it separately.
 
-\begin{eqnarray}
-    \nabla_{\theta_{policy}} \big\{\nu + \frac{1}{1-\alpha} \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]\big\} =\\
-    = \frac{1}{1-\alpha} \nabla_{\theta_{policy}} \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]
-\end{eqnarray}
+\begin{align}
+    \nabla_{\theta_{policy}} \big\{\nu + \frac{1}{1-\alpha}
+    \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]\big\} =
+    = \frac{1}{1-\alpha} \nabla_{\theta_{policy}}
+    \mathbb E_Z[[Z^\theta (x_0,\mu_{\theta_{policy}})- \nu]^+]
+\end{align}
+From same batch replay samples (s,a,s',r):
+Compute sampled distribution $Z(s,\mu_{\theta_{targetpolicy}} | \tau, \theta_{currentcritic})$
+where $\tau  \sim U[0,1]$
+Take samples from distribution via IQN:
 
-From same batch replay samples (s,a,s',r):\\
-Compute sampled distribution $Z(s,\mu_{\theta_{targetpolicy}} | \tau, \theta_{currentcritic})$ \\
-where $\tau  \sim U[0,1]$\\
-Take samples from distribtuion via IQN:\\
-
-$Z^\theta (s,\mu_{\theta_{policy}} (s) |\tau_j, \theta_{currentcritic})- \nu]^+]$.mean() for every $\tau_j, j \in [0,N]$\\
+$Z^\theta (s,\mu_{\theta_{policy}} (s) |\tau_j, \theta_{currentcritic})- \nu]^+]$.mean() for every $\tau_j, j \in [0,N]$
 
 and sum over all batch size samples.
 
 
-Update $\theta_{currentpolicy}$ with gradient descent (min cvar for risk sensitive policies)\\
-From time to time update parameters of $\theta_{targetpolicy}$\newline
+Update $\theta_{currentpolicy}$ with gradient descent (min cvar for risk sensitive policies)
+From time to time update parameters of $\theta_{targetpolicy}$
 
 
 \textbf{4) Learn $\nu$} using CVaR Sebastian code.\\
@@ -90,7 +107,7 @@ From time to time update parameters of $\theta_{targetpolicy}$\newline
  \end{equation}
 
 Sebastian says it is a jointly convex function so we can learn them together.
-Mainly, we dont' even need to learn $nu$, just sample $\tau  \sim U[0,\alpha]$, and 
+Mainly, we don't even need to learn $nu$, just sample $\tau  \sim U[0,\alpha]$, and 
 minimize the mean of the samples.
 An advantage is that we wont' "lose" samples from the good-side of the distribution, since 
 we have the RELU operation,which would discard those.

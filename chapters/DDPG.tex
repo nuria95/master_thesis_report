@@ -1,1 +1,134 @@
+\chapter{Algorithm: Off-policy deterministic AC}
+\label{sec:algo}
 \section{Distributional Deterministic Policy Gradients}
+
+We introduce an off-policy actor-critic distributional algorithm.
+The actor uses a distributional variant of the deterministic policy gradient algorithm.
+
+\subsection{Off-policy Deterministic policy gradient algorithm}
+We will use an actor-critic approach based on the DPG algorithm \cite{silver2014b}
+which uses deterministic policies $a=\mu_{\theta}(s)$.
+From a practical viewpoint, using stochastic policies requires integrating over both
+state and action spaces to compute the policy gradient, whereas the deterministic case
+only needs to integrate over the state space. Hence, stochastic policy gradients
+may require much more samples, especially if the action space has many dimensions.
+
+In general, behaving according to a deterministic policy does not ensure adequate exploration,
+and may lead to suboptimal solutions. 
+However, if the policy is deterministic, the expected cumulative reward in the next-state
+depends only on the environment. This means that it is possible to learn the value function
+Q under policy $\mu$ off-policy, ie using transitions which are generated from a different stochastic
+behavior policy $\beta$ which act on the environment and ensures enough exploration.
+that ensures enough exploration. will use an off-policy actor-critic.
+An advantage of offpolicy algorithms is that we can treat the problem of exploration
+independently from the learning algorithm.
+
+Q-learning \cite{Watkins1992}, a commonly used off-policy algorithm, uses the greedy policy
+$\mu(s)=\underset{a}{\text{argmax}} Q(x,a)$.
+In  a  continuous  action  space, it is not possible to apply Q-learning straight-forward because finding the 
+greedy policy requires an optimization of a at every timestep, which is too slow to be practical with large action spaces.
+In this case, actor-critic methods are commonly used, where action selection is performed through a
+separate policy network, known as the actor,and updated with respect to a value estimate,
+known as the critic \cite{Sutton1998}.
+The policy can be updated following the deterministic policy gradient theorem \cite{silver2014b},
+which corresponds to learning an approximation to the maximum of Q,
+by propagating the gradient through both policy and Q.
+Specifically maximizing, the performance objective which is the value function of the target policy $\mu$, averaged over the state
+distribution of the behavior policy $\beta$:
+
+\begin{align}
+    J_\beta(\mu | \theta^\mu) = \int_\mathcal{S} \rho^\beta(s)Q^{\mu}(x,\mu (x| \theta^\mu))dx \nonumber\\
+    \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) \approx \mathbb E_{x \sim \rho^\beta} \label[]{eq:off_policy_gradient}
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a Q^{\mu}(x,a)|_{a=\mu(x| \theta^\mu)}  \big]
+\end{align} 
+
+
+\eqref{eq:off_policy_gradient} gives the off-policy deterministic policy gradient, which was proved
+by \cite{silver2014b}  to be the policy gradient, ie the gradient of the policy's performance.
+A term that depends on $\nabla_\theta Q^{\mu_\theta}(x,a) $ has been dropped in \, following a justification
+given by \cite{Degris2012} that argues that this is a good approximation since it can
+preserve the set of local optima to which gradient ascent converges.
+
+Similarly to \cite{Lillicrap2016}, we will use neural networks as non-linear function approximators
+for learning both action-value functions and the deterministic target policy.
+
+\subsection{Distributional approach}
+\subsubsection{Critic}
+Instead of using the standard critic network that approximates the value function,
+we will use the distribution variant which maps from state-action pairs to distributions, similar
+to the implicit quantile network (IQN) introduced in \cite{Dabney2018a}.\\
+IQN is a deterministic parametric function trained to reparameterize samples from a
+base distribution, e.g $\tau \in U([0,1])$, to the respective
+quantile values of a target distribution.
+We define $Z(x,a;\tau)$ as the quantile function at $\tau \in [0,1]$ for the random variable $Z(x,a)$.
+Thus, for $\tau \in U([0,1])$, the resulting state-action return distribution sample is
+$Z(x,a;\tau)\sim Z(x,a)$
+
+The parameters $\theta^Z$ of the IQN network are updated using backpropagation of the sampled 
+quantile regression loss.
+The quantile regression loss is computed on the sampled temporal-difference error
+using the distributional Bellman operator:
+For two samples $\tau, \tau' \sim U([0,1])$, and current policy $\mu_{\theta}$, the sampled
+TD error is:
+
+\begin{align}
+    \delta^{\tau, \tau'} = r + \gamma Z(x',\mu(x');\tau'| \theta^\mu)-Z(x,a;\tau)
+\end{align}
+Then, we compute the quantile regression loss:
+\begin{equation}
+    \mathcal{L}(x,a,r,x')= \frac{1}{N}\sum_{i=1}^{N}\sum_{j=1}^{N'}\rho_{\tau_i}(\delta^{\tau_i, \tau_j'})
+\end{equation}
+
+where $\rho$ is as defined in \eqref{eq:quantile_loss} and 
+where N and N' are the number of iid samples $\tau_i, \tau_j' \sim U([0,1]$ used to estimate the loss.
+
+\subsubsection{Actor}
+The policy is updated via deterministic policy gradient ascent.
+We modify equation  \eqref{eq:off_policy_gradient}, to include the action-value distribution.
+
+\begin{align}
+    \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) &\approx \mathbb E_{x \sim \rho^\beta} 
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a Q^{\mu}(x,a)|_{a=\mu(x| \theta^\mu)}  \big]\\
+    &=\mathbb E_{s \sim \rho^\beta} 
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \mathbb E [\nabla_a Z(x,a | \theta^Z)]|_{a=\mu(x| \theta^\mu)}  \big]
+\end{align}
+
+The term $\mathbb E [\nabla_a Z(x,a | \theta^Z)]$ comes by the fact that
+\begin{equation}
+    Q^\mu(x,a) = \mathbb E[Z^\mu(x,a)]
+\end{equation}
+However, we could modify the objective of DPG algorithm
+\begin{equation}
+    \underset{\mu}{\text{max}} Q(x,\mu(x)) := \underset{\mu}{\text{max}} \mathbb E[Z(x,\mu(x))]
+\end{equation}
+for a more general one:
+\begin{equation}
+    \underset{\mu}{\text{max}} \text{CVAR}_\alpha[Z(x,\mu(x))]   
+\end{equation}
+
+since we can see the cvar of the distribution as a distorted expectation of the value distribution. 
+and which allows us for risk-sensitive, risk-averse or risk-neutral policies depending on the value of $\alpha$.
+add pag 2 proof sent to sebastian last day
+
+
+
+add replay batch, target networks.. p4 lillicrap
+% Paragraph important dpg p. 5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,8 @@
 
+\chapter{Distributional RL}
+\label{sec:distr_rl}
+
+
 \section{Distributional RL}
 
 Recent research has been done demonstrating the importance of learning the value
@@ -8,8 +12,7 @@ This differs from the common RL approach which is focused on learning the expect
  of this return.
 
 One of the major goals of RL is to teach an agent so that it learns how to act so that it
- maximizes its
-expected utility, Q \cite{Sutton1998}
+maximizes its expected utility, Q \cite{Sutton1998}
 Bellman's equation describes this value Q in terms of the expected reward and expected
 outcome of the 
 random transition $(x,a) \to (X',A')$, showing the
@@ -235,7 +238,7 @@ A quantile distribution $Z_\theta \in \mathcal{Z_Q}$ maps each state-action pair
 probability distribution supported on $\{\theta_i(x,a)  \}$. Hence we can approximate it by a 
 uniform mixture of N Diracs:
 \begin{equation}
-    Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}
+    Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}  \label{eq:discrete_pdf}
 \end{equation}
 with each $\theta_i$ assigned a fixed quantile.
 We aim to learn the support of these Diracs, i.e learn $\theta_i \forall i, a, x$.
@@ -243,7 +246,7 @@ We will do it by quantifying the projection of an arbitrary value distribution $
 onto $\mathcal{Z_Q}$, that is:
 
 \begin{equation}
-    \prod{}_{W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta) \label{eq:discrete_pdf}
+    \prod{}_{W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta)
 \end{equation}
 
 This projection $\prod_ {W_1}$ is the quantile projection.\\
@@ -265,10 +268,10 @@ that penalizes underestimation errors with weight $\tau$ and overestimation erro
 with weight $1-\tau$. \\
 For a distribution Z, and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
 may be characterized as the minimizer of the quantile regression loss:
-\begin{eqnarray}
-    \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ]\\
-    \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \label{eq:quantile_loss}
-\end{eqnarray}
+\begin{align}
+    \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ] \label{eq:quantile_loss}\\
+    \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \nonumber
+\end{align}
 Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and using Lemma 2 in \cite{Dabney2018},
 which claims that the values of $\{\theta_1, ... \theta_N\}$ that minimize
  $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$; we can claim that

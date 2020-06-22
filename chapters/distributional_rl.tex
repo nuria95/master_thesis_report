@@ -1,4 +1,8 @@
 
+\chapter{Distributional RL}
+\label{sec:distr_rl}
+
+
 \section{Distributional RL}
 
 Recent research has been done demonstrating the importance of learning the value
@@ -8,8 +12,7 @@ This differs from the common RL approach which is focused on learning the expect
  of this return.
 
 One of the major goals of RL is to teach an agent so that it learns how to act so that it
- maximizes its
-expected utility, Q \cite{Sutton1998}
+maximizes its expected utility, Q \cite{Sutton1998}
 Bellman's equation describes this value Q in terms of the expected reward and expected
 outcome of the 
 random transition $(x,a) \to (X',A')$, showing the
@@ -100,7 +103,7 @@ Then, the Distributional Bellman operator $T^\pi$ is defined as:
 
 
 \cite{Bellemare2017} showed that \eqref{eq:distrbellmanoperator} is a contraction
-mapping whose unique fixed point is the 
+mapping in Wasserstein metric whose unique fixed point is the 
 random return $Z^\pi$.
 
 \subsubsection{Wasserstein metric:}
@@ -193,10 +196,10 @@ A greedy policy $\pi$ for Z $in \mathcal{Z}$ maximizes the expectation of Z. The
 We will call a \textit{distributional Bellman optimality operator} any operator $\mathcal{T}$ which implements a greedy selection
 rule, ie:
 \begin{equation*}
-    \mathcal{T}Z = \big\{ \mathcal{T^\pi}Z \; \text{for some}\; \pi \in   \mathcal{G_Z} \big\}
+    \mathcal{T}Z = \big\{ \mathcal{T}^\pi Z \; \text{for some}\; \pi \in   \mathcal{G_Z} \big\}
 \end{equation*}
 As in the policy evaluation setting, we are interested in the behavior of the iterates 
-$Z_{k+1} := \mathcal{T}Z_k, Z_O \in \mathcal{Z}$.
+$Z_{k+1} := \mathcal{T}Z_k, Z_0 \in \mathcal{Z}$.
 Lemma 4 in \cite{Bellemare2017} shows that $\mathbb E Z_k$ behaves as expected:
 \textbf{Lemma 4:} Let $Z_1, Z_2 \in \mathcal{Z}$. Then:
 \begin{equation*}
@@ -235,7 +238,7 @@ A quantile distribution $Z_\theta \in \mathcal{Z_Q}$ maps each state-action pair
 probability distribution supported on $\{\theta_i(x,a)  \}$. Hence we can approximate it by a 
 uniform mixture of N Diracs:
 \begin{equation}
-    Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}
+    Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}  \label{eq:discrete_pdf}
 \end{equation}
 with each $\theta_i$ assigned a fixed quantile.
 We aim to learn the support of these Diracs, i.e learn $\theta_i \forall i, a, x$.
@@ -243,9 +246,9 @@ We will do it by quantifying the projection of an arbitrary value distribution $
 onto $\mathcal{Z_Q}$, that is:
 
 \begin{equation}
-    \prod_ {W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta) \label{eq:discrete_pdf}
+    \prod{}_{W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta)
 \end{equation}
-\todo{get the W1 next to the prod not below}
+
 This projection $\prod_ {W_1}$ is the quantile projection.\\
 We can quantify the projection between a distribution with bounded first moment Y and U, a uniform distribution
 over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta_N\}$ by:
@@ -254,20 +257,21 @@ over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta
     W_1(Y,U)= \sum_{i=1}^{N}\int_{\tau_{i-1}}^{\tau_i} |   F_Y^{-1}(w)-\theta_i   |dw
 \end{equation}
 
-Lemma 2 in \cite{Dabney2018} establishes that the values $\{\theta_1, ... \theta_N\}$ for the returns  that minimize 
-$W_Y(Y,U)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$, where $\hat\tau_i=\frac{\tau_{i-1}+\tau_i}{2}$.
+Lemma 2 in \cite{Dabney2018} establishes that the values $\{\theta_1, ... ,\theta_N\}$ for the returns  that minimize 
+$W_1(Y,U)$ are given by $\theta_i = F_Y^{-1}(\hat\tau_i)$, where $\hat\tau_i=\frac{\tau_{i-1}+\tau_i}{2}$.
 
 \subsection{Quantile Regression}
-Quantile regression is a method for approximating quantile functions of distributions.
+Quantile regression is a method for approximating quantile functions of a distribution at specific points, ie its inverse
+cumulative distribution function.
 The quantile regression loss, for quantile $\tau \in [0,1]$, is an asymmetric convex lox function
 that penalizes underestimation errors with weight $\tau$ and overestimation errors
 with weight $1-\tau$. \\
 For a distribution Z, and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
 may be characterized as the minimizer of the quantile regression loss:
-\begin{eqnarray}
-    \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ]\\
-    \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \label{eq:quantile_loss}
-\end{eqnarray}
+\begin{align}
+    \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ] \label{eq:quantile_loss}\\
+    \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \nonumber
+\end{align}
 Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and using Lemma 2 in \cite{Dabney2018},
 which claims that the values of $\{\theta_1, ... \theta_N\}$ that minimize
  $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$; we can claim that
@@ -286,10 +290,8 @@ by stochastic gradient descent.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{images/quantile_loss.pdf}
-    \caption{Car trajectory using DDPG algorithm and velocity penalization with
-    probability P=0.2}
+    \caption{Quantile loss for different quantile values}
     \label{quantile_loss}
-
 \end{figure}
 
 Proposition 2 in \cite{Dabney2018} states that the combined quantile projection 
@@ -298,13 +300,13 @@ of this operator, or its stochastic approximation, converges to $\hat{Z}^\pi$.
 
 \subsection{Quantile Regression Temporal Difference Learning}
 Temporal difference learning updates the estimated value function with a single unbiased 
-saple following policy $\pi$.
+sample following policy $\pi$.
 Quantile regression allows to improve the estimate of the quantile function for some target
 distribution Y(x), by observing samples $y\sim Y(x)$ and minimizing equation \eqref{eq:quantile_loss}.
 Using the quantile regression loss, we can obtain an approximation with minimal 1-Wasserstein distance
 from the original.
 We can combine this with the distributional Bellman operator to give a target distribution
-for quantile regression, creating the quantile regression temporal differnce learning algorithm:
+for quantile regression, creating the quantile regression temporal difference learning algorithm:
 
 \begin{eqnarray}
     u=r+\gamma z' - \theta_i(x)\\

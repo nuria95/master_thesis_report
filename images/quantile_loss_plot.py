@@ -24,7 +24,7 @@ def quantile_plot(q):
 if __name__ == "__main__":
     for q in [0.25, 0.5, 0.75, 0.9]:
         quantile_plot(q=q)
-    plt.title('Quantile loss')
+    plt.title('Quantile loss', fontsize=20)
     plt.xlabel('Residual')
     plt.ylabel('Loss')
     plt.xticks(np.arange(-1, 1.5, step=0.5))

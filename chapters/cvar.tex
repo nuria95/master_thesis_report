@@ -1,4 +1,6 @@
-\section{IDEA AND CAR EXPERIMENT}
+\chapter{Conditional Value at Risk (CVaR)}
+\label{sec:cvar}
+\section{CVaR}
 
 We focus on the importance of \textit{value distribution}, the distribution of the random return received by a RL
 agent, in contrast to the common approach in RL of modelling the expectation of this return.
@@ -26,7 +28,7 @@ the expected reward of outcomes worse than the $\alpha$-quantile ($\text{VaR}_\a
  the following optimization problem:
 
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \underset{\nu} \min \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\}
+    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\}
 \end{equation}
 
 where $(x)^- = \min(x,0)$. In the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.
@@ -46,8 +48,3 @@ given by:
 
 Thus, the CVaR of a random variable may be interpreted as the worst case expectation of Z, under
 a perturbed distribution $\xi \mathbb{P}$.
-
-
-
-
-

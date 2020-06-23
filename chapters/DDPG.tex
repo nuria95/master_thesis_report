@@ -20,7 +20,7 @@ depends only on the environment. This means that it is possible to learn the val
 Q under policy $\mu$ off-policy, ie using transitions which are generated from a different stochastic
 behavior policy $\beta$ which act on the environment and ensures enough exploration.
 that ensures enough exploration. will use an off-policy actor-critic.
-An advantage of offpolicy algorithms is that we can treat the problem of exploration
+An advantage of off-policy algorithms is that we can treat the problem of exploration
 independently from the learning algorithm.
 
 Q-learning \cite{Watkins1992}, a commonly used off-policy algorithm, uses the greedy policy
@@ -37,7 +37,7 @@ Specifically maximizing, the performance objective which is the value function o
 distribution of the behavior policy $\beta$:
 
 \begin{align}
-    J_\beta(\mu | \theta^\mu) = \int_\mathcal{S} \rho^\beta(s)Q^{\mu}(x,\mu (x| \theta^\mu))dx \nonumber\\
+    J_\beta(\mu | \theta^\mu) = \int_\mathcal{X} \rho^\beta(s)Q^{\mu}(x,\mu (x| \theta^\mu))dx \nonumber\\
     \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) \approx \mathbb E_{x \sim \rho^\beta} \label[]{eq:off_policy_gradient}
     \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a Q^{\mu}(x,a)|_{a=\mu(x| \theta^\mu)}  \big]
 \end{align} 
@@ -60,7 +60,7 @@ to the implicit quantile network (IQN) introduced in \cite{Dabney2018a}.\\
 IQN is a deterministic parametric function trained to reparameterize samples from a
 base distribution, e.g $\tau \in U([0,1])$, to the respective
 quantile values of a target distribution.
-We define $Z(x,a;\tau)$ as the quantile function at $\tau \in [0,1]$ for the random variable $Z(x,a)$.
+We define $F^{-1}_Z(\tau):=Z(x,a;\tau)$ as the quantile function at $\tau \in [0,1]$ for the random variable $Z(x,a)$.
 Thus, for $\tau \in U([0,1])$, the resulting state-action return distribution sample is
 $Z(x,a;\tau)\sim Z(x,a)$
 
@@ -88,32 +88,81 @@ We modify equation  \eqref{eq:off_policy_gradient}, to include the action-value 
 
 \begin{align}
     \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) &\approx \mathbb E_{x \sim \rho^\beta} 
-    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a Q^{\mu}(x,a)|_{a=\mu(x| \theta^\mu)}  \big]\\
-    &=\mathbb E_{s \sim \rho^\beta} 
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a Q^{\mu}(x,a)|_{a=\mu(x| \theta^\mu)}  \big]\label{eq:distr_dpg_alg1}\\
+    &=\mathbb E_{x \sim \rho^\beta} 
     \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \mathbb E [\nabla_a Z(x,a | \theta^Z)]|_{a=\mu(x| \theta^\mu)}  \big]
+    \label{eq:distr_dpg_alg2}
 \end{align}
 
-The term $\mathbb E [\nabla_a Z(x,a | \theta^Z)]$ comes by the fact that
+
+
+\section{Risk}
+
+The step from \eqref{eq:distr_dpg_alg1} to \eqref{eq:distr_dpg_alg2} $\mathbb E [\nabla_a Z(x,a | \theta^Z)]$ comes by the fact that
 \begin{equation}
-    Q^\mu(x,a) = \mathbb E[Z^\mu(x,a)]
+    Q(x,a) = \mathbb E[Z(x,a)] \label{eq:neutral_policy}
 \end{equation}
-However, we could modify the objective of DPG algorithm
+We could make use of the information provided by the distribution over returns to learn 
+risk-sensitive policies, ie do not maximize the expected valued of the cumulative reward but other metrics
+that take into account risk of the actions.
+To approach this, either we use a performance objective that aims to maximize a concave utility function that
+gives rise to a risk-averse policy:
+
 \begin{equation}
-    \underset{\mu}{\text{max}} Q(x,\mu(x)) := \underset{\mu}{\text{max}} \mathbb E[Z(x,\mu(x))]
+    \pi(x)= \underset{a}{\text{argmax}} \mathbb E_{Z(x,a)} [U(z)]
 \end{equation}
-for a more general one:
+
+or equivalently, we distort the cumulative probabilities of the random variable Z
+using a \textit{distortion risk measure} and compute the expectation of the reweighted
+distribution under this distortion measure.
+
+We propose to use the later approach, ie use as a performance objective 
+the distorted expectation of  Z(x,a) under the distortion risk measure $\beta: [0,1] \ra [0,1]$,
+which transforms equation  \eqref{eq:neutral_policy} can be converted to a more general one:
 \begin{equation}
-    \underset{\mu}{\text{max}} \text{CVAR}_\alpha[Z(x,\mu(x))]   
+    Q_\beta(x,a) = \mathbb E_{\tau \sim U([0,1])} [Z_{\beta(\tau)}(x,a)] \label{eq:risk_policy}
 \end{equation}
 
-since we can see the cvar of the distribution as a distorted expectation of the value distribution. 
-and which allows us for risk-sensitive, risk-averse or risk-neutral policies depending on the value of $\alpha$.
-add pag 2 proof sent to sebastian last day
+Since distorted expectations can be expressed as weighted average over the quantiles \cite{Dhaene2012},
+we can use a specific sampling base distribution $\beta: [0,1] \ra [0,1]$
+to sample the quantile levels $\tau \in[0,1])$ from our critic network $Z(x,a; \tau)$.
 
+As stated, our goal is to maximize the CVaR:
+\begin{equation}
+    \underset{\mu} \max \text{CVaR}_\alpha [Z (x_0, \mu(x_0))] 
+\end{equation}
 
+We remind ourselves of its definition as a weighted sum over the quantiles under the distortion risk measure:
+$\beta(\tau) = \alpha \tau$ as :
+\begin{align}
+\text{CVaR}_\alpha (Z) &= \int_{0}^1 F^{-1}_Z(\tau)d\beta(\tau)
+\end{align}
 
+Hence:
+\begin{align}
+\text{CVaR}_\alpha (Z)&=\frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\tau) d\tau\label{eq:cvar_1}
+\end{align}
+
+We can hence approximate \eqref{eq:cvar_1} via sampling, by taking k samples of 
+$\hat\tau :=\beta(\tau) \text{ where } \tau \sim U[0,1]$, i.e $\hat\tau \sim U[0,\alpha]$:
+\begin{equation}
+\text{CVaR}_\alpha (Z) \approx \frac{1}{\alpha} \frac{1}{k}\sum_{i=1}^kZ(x,a; \hat\tau_i)
+\qquad \hat\tau_i \sim U[0,\alpha] \quad \forall i \in [1,k]
+\end{equation}
+
+Finally, then, we use the following distributional policy gradient for the actor network:
+
+\begin{align}
+    \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) &\approx \mathbb E_{x \sim \rho^\beta} 
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a  [\frac{1}{\alpha} \frac{1}{k}\sum_{i=1}^kZ(x,a; \hat\tau_i) | \theta^Z)]|_{a=\mu(x| \theta^\mu)}  \big]
+    \label{eq:actor_grad}
+\end{align}
+
+d
+
+\todo{add pag 2 proof sent to sebastian last day
 add replay batch, target networks.. p4 lillicrap
-% Paragraph important dpg p. 5
+Paragraph important dpg p. 5}
 
 
 

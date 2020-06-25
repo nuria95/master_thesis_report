@@ -1,0 +1,54 @@
+
+\section{Current results Batch RL HalfCheetah}
+We use one of the D4RL datasets.
+Specifically \textit{halfcheetah-medium-v0}, which uses 1M samples from a policy trained
+to approximately 1/3 the performance of the expert.
+
+We introduce stochasticity in the original cost function in a way that 
+makes the environment stochastic enough to have a meaningful assessment of risk in terms of 
+tail performance.
+A reward of -100 is given wp 0.05, if the velocity of the cheetah is greater than 4.
+We train using the distributional critic and a policy that consists of a variational autoencoder
+to sample from the dataset distribution and then a second perturbing network that shifts the
+action towards maximizing the sampled CVaR.
+The perturbation is up to 0.5 (paper originally 0.05).
+
+\begin{figure}[ht]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/cvar_train.pdf}
+        \caption{CVaR of the cumulative episode rewards over 10 episodes while training}
+        \label{cvar_cheetah}
+    
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/mean_train.pdf}
+    \caption{Mean of the cumulative episode rewards over 10 episodes while training}
+    \label{mean_cheetah}
+
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/actorloss.pdf}
+    \caption{Sampled CVaR while training}
+    \label{actorloss_cheetah}
+
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/times_exceedvel.pdf}
+    \caption{Times of velocity exceed while training}
+    \label{vel_exceed_cheetah}
+
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/hist_evaluation_numevalsteps200.pdf}
+    \caption{Histogram of cumulative reward during 200 timesteps using the trained final policies}
+    \label{hist_cum_rewards200steps_cheetah}
+
+\end{figure}

@@ -2,5 +2,41 @@
 \begin{itemize}
     \item Watch videos Levine
     \item Papers bear and bcq
+    
 \end{itemize}
 
+We decide to test the capabilities of our algorithm in a \textit{fully} off-policy setting, 
+also called in the literature as \textit{batch RL setting} or \textit{offline} RL. In this setting, the agent 
+can only learn from a fixed dataset without further interaction with the environment.
+
+\todo{ Add motivation on doing so: envs where collection of data is expensive, unsafe for robotics or autonomous vehicles}
+
+The 'off-policy' algorithm we presented in previous sections falls in the category of 
+off-policy \textit{"growing batch learning"} in which data is collected and stored in a replay buffer,
+used for training and then replaced with \textit{fresher} data obtained from interaction of the agent with the
+environment using an updated policy.
+
+\textbf{Issues with Batch RL}
+
+Most of off-policy algorithms fail to learn in the off-line setting. 
+This is due to a fundamental problem on offpolicy RL, called extrapolation error \citep{Fujimoto2019} or 
+bootstrapping error \citep{Kumar2019}. This error is introduced due to a mismatch
+between the dataset distribution and the state-action visitation distribution induced by the
+policy being learnt.
+When doing the Bellman update, we compute mean squared error between the current value estimate and
+the expected value under the policy at the next state.
+The Q function estimator, however, is valid only when evaluated on actions sampled from the behavior policy,
+which in the batch-RL case is the distribution of the dataset.
+When the current policy selects an unfamiliar (unlikely or not contained in the dataset, 
+also called out of distribution (OOD) actions in \citep{Kumar2019} ) action for the next-state,
+results on an updated Q value estimated which is affected by this extrapolation error,
+resulting in pathological values that incur large absolute error from the optimal desired Q-value.
+
+
+\textbf{Our approach}
+
+Change the Deterministic actor network to:
+
+VAE(state) + perturbation\_level $\times$ DeterministicActorNN(vae\_action, state)\\
+Train VAE with reconstruction loss + KL\_divergence\\
+Train DeterministicActorNN as in the algorithm presented previously for off-policy RL.

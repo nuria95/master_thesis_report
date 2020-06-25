@@ -6,7 +6,7 @@ We introduce an off-policy actor-critic distributional algorithm.
 The actor uses a distributional variant of the deterministic policy gradient algorithm.
 
 \subsection{Off-policy Deterministic policy gradient algorithm}
-We will use an actor-critic approach based on the DPG algorithm \cite{silver2014b}
+We will use an actor-critic approach based on the DPG algorithm \citep{silver2014b}
 which uses deterministic policies $a=\mu_{\theta}(s)$.
 From a practical viewpoint, using stochastic policies requires integrating over both
 state and action spaces to compute the policy gradient, whereas the deterministic case
@@ -154,19 +154,28 @@ Finally, then, we use the following distributional policy gradient for the actor
 
 \begin{align}
     \nabla_{\theta^\mu} J_\beta(\mu | \theta^\mu) &\approx \mathbb E_{x \sim \rho^\beta} 
-    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a  [\frac{1}{\alpha} \frac{1}{k}\sum_{i=1}^kZ(x,a; \hat\tau_i) | \theta^Z)]|_{a=\mu(x| \theta^\mu)}  \big]
+    \big [\nabla_{\theta^\mu} \mu(x,| \theta^\mu) \nabla_a  [\frac{1}{\alpha} \frac{1}{k}
+    \sum_{i=1}^kZ(x,a; \hat\tau_i) | \theta^Z)]|_{a=\mu(x| \theta^\mu)}  \big]
     \label{eq:actor_grad}
 \end{align}
 
-d
+It is important to notice the capability of the algorithm to be implemented off-policy.
+Stochastic off-policy actor-critic algorithms, as presented in \citet{Degris2012}, typically
+use importance sampling for both actor and critic. 
+However, when using deterministic policies the policy gradient doesn't include the integral over actions,
+and hence we can avoid importance sampling in the actor.
+Additionally, by using "Q-learning for continuous action spaces", we can avoid importance sampling in the critic.
 
-\todo{add pag 2 proof sent to sebastian last day
-add replay batch, target networks.. p4 lillicrap
-Paragraph important dpg p. 5}
+
+\section{Details algorithm}
 
 
+\begin{itemize}
+	\item Add replay buffer, target networks.. dqn (p4 lillicrap)
 
-
+	\item Noises, ...
+	\item Algorithm like in papers
+\end{itemize}
 
 
 

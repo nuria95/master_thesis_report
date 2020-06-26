@@ -34,8 +34,15 @@ Hence the final cumulative reward $G_T= (20+1) R_{\si{\ts} } + R_{F}=60$.
     
 \end{figure}
 
-Starting from $x_0=0$\si\metre, the car reaches a velocity of 1\si{\metre\per\ts} after 10 time-steps, at $x_{\tau=10}=0.5$. Keeping velocity 1\si{\metre\per\ts} through the rest of the episode,it reaches the goal position after $14$ time-steps. Hence the final cumulative reward $G_T= (10+14+1) R_{\tau} + R_{F}=74$.
-The reward values were chosen in order to make sure that, for this Case 2 setting, driving with a velocity higher than 1\si{\metre\per\ts} never induces higher cumulative rewards.\\
+Starting from $x_0=0$\si\metre, the car reaches a velocity of 1\si{\metre\per\ts} after
+10 time-steps, at $x_{\tau=10}=0.5$.
+Keeping velocity 1\si{\metre\per\ts} through the rest of the episode,
+it reaches the goal position after $14$ time-steps. 
+Hence the final cumulative reward $G_T= (10+14+1) R_{\tau} + R_{F}=74$.
+The reward values were chosen in order to make sure that,
+for this Case 2 setting, driving with a velocity higher than 1\si{\metre\per\ts} never
+induces higher cumulative rewards.
+
 
 \subsection{Case 2: Velocity penalization with probability 1 }
 The experiment is carried out to ensure the two algorithms manage to learn the new reward function when there is no uncertainty.
@@ -83,9 +90,11 @@ The quantiles used for learning the actor for the CVAR-DDPG algorithm were sampl
 uniformly $\backsim\ U[0,\alpha] $ where $\alpha=0.1$
 
 
-\textbf{The models saved were the ones that obtained a maximum CVAR (with a window of 10 episodes) of the cumulative rewards during evaluation}\\
+\textbf{The models saved were the ones that obtained a maximum CVAR (with a window of 
+10 episodes) of the cumulative rewards during evaluation}
 
-The quantiles used for learning the actor for the CVAR-DDPG algorithm were sampled uniformly $\backsim\ U[0,\alpha] $ where $\alpha=0.2$\\
+The quantiles used for learning the actor for the
+CVAR-DDPG algorithm were sampled uniformly $\backsim\ U[0,\alpha] $ where $\alpha=0.2$.
 
 
 For $P=0.2$ the CVAR-DDPG algorithm learns to saturate the velocity, even though the

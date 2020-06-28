@@ -15,16 +15,17 @@ The perturbation is up to 0.5 (paper originally 0.05).
 
 \begin{figure}[ht]
         \centering
-        \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/cvar_train.pdf}
-        \caption{CVaR of the cumulative episode rewards over 10 episodes while training}
+        \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/cvar_train_withstds.pdf}
+        \caption{Evolution during training of CVaR ($\alpha=0.1)$ of the cumulative rewards
+        over 5 evaluation episodes}
         \label{cvar_cheetah}
     
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/mean_train.pdf}
-    \caption{Mean of the cumulative episode rewards over 10 episodes while training}
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/mean_train_withstds.pdf}
+    \caption{Evolution during training of mean of the cumulative rewards over 5 evaluation episodes}
     \label{mean_cheetah}
 
 \end{figure}
@@ -33,8 +34,8 @@ The perturbation is up to 0.5 (paper originally 0.05).
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/times_exceedvel.pdf}
-    \caption{Times of velocity exceed while training}
+    \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/times_exceedvel_withstds.pdf}
+    \caption{Evolution during training of mean of times of maximum velocity exceed over 5 evaluation episodes}
     \label{vel_exceed_cheetah}
 
 \end{figure}

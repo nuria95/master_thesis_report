@@ -6,3 +6,38 @@
     \item Focus on CVaR
     \item State of the art on risk-averse, special emphasis on Chow and its disadvantages
 \end{itemize}
+
+Decision-making is the process of taking choices by identifying an optimal strategy
+from current system states. 
+A crucial element in the process is the performance measure used
+to assess how good the choice is for the decision-maker or agent.
+
+In sequential decision-making problems, the most common optimization criterion is the 
+expectation of the cumulative reward collected by the agent, which leads to a \textit{risk-neutral}
+behavior.
+
+However, this approach neither takes in to account the variability of the rewards (i.e fluctuations around the mean),
+nor its sensitivity to modeling errors. 
+In some scenarios affected by measurement or modelling errors, such as autonomous navigation,
+finances or medicine, and in which the safety of the agent is particularly important, it is crucial to ensure that
+only \textit{safe} action strategies will take place,
+for example, ensuring received rewards will always remain above a critical threshold.
+
+In many works, the concept of safety or its opposite risk is related to the inherent stochasticity of the environment
+and with the fact, that under those environments, even an optimal policy with respect to the cumulative reward,
+may perform poorly in some cases. Since maximizing the expected cumulative-reward does not necessarily imply 
+the avoidance of rare occurrences of large negative outcomes, we need other criteria to evaluate risk. \citep{Garcia2015}
+
+Risk-sensitive decision-making provides a promising
+approach to compute robust and safe policies, but
+finding computationally tractable and conceptually meaningful methodologies for such a goal is non-trivial
+and still a challenge.
+
+In this thesis, we focus on the reinforcement learning (RL) framework, a branch of machine learning
+that focuses on dynamic decision making in unknown environments, and propose a risk-sensitive approach
+to act \textit{safely} in a non-deterministic environment.
+
+
+
+
+

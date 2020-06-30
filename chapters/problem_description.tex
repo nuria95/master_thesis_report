@@ -192,8 +192,8 @@ Most recently, \citet{Dabney2018b} presented a distributional RL approach to tra
 using, among others, CVaR as risk objective. The approach uses Q-learning
 and hence, it is only suitable for discrete action spaces.
 
-In this thesis, we present an off-policy, model-free algorithm for CVaR optimization,
-based on the deep deterministic policy gradient algorithm that can operate over continuous action spaces.\\
+In this thesis, we present an off-policy, actor-critic, model-free algorithm for CVaR optimization,
+based on the deterministic policy gradient algorithm that can operate over continuous action spaces.\\
 Instead of empirically estimating the VaR from the observed rewards or using the CVaR
 Bellman equation, we rely on the recent advances in distributional RL 
 \citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full

@@ -192,19 +192,16 @@ Most recently, \citet{Dabney2018b} presented a distributional RL approach to tra
 using, among others, CVaR as risk objective. The approach uses Q-learning
 and hence, it is only suitable for discrete action spaces.
 
-We work towards sample efficient RL algorithms that can learn optimal CVaR policies.
-no biased alpha quantile since it is estimated by the Z distribution not sampled
-off--policy
-deterministic
-continuous actions
-incremental
+In this thesis, we present an off-policy, model-free algorithm for CVaR optimization,
+based on the deep deterministic policy gradient algorithm that can operate over continuous action spaces.\\
+Instead of empirically estimating the VaR from the observed rewards or using the CVaR
+Bellman equation, we rely on the recent advances in distributional RL 
+\citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
+\textit{value distribution} (i.e. the distribution of the random return received by a RL agent).
+We then compute the CVaR of the current policy via sampling from the estimated value distribution
+and maximize it via stochastic gradient ascent.
 
 
-In this thesis, we present an off-policy approach for CVaR optimization using actor-critic approach based on the DPG algorithm.
-Instead of estimating the VaR empirically from the observed rewards or using CVaR Bellman equations,
-we rely on the recent advances on distributional RL  \citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
-\textit{value distribution} (i.e. the distribution of the random return received by a RL agent) and from there, compute the
-\todo{too ambiguous/incorrect?} \textit{estimated empirical} CVaR.
 
 
 

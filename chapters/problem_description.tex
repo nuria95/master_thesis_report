@@ -1,12 +1,16 @@
 \chapter{Problem description and Related work}
 \label{sec:problem_description}
 \section{Problem description}
-\begin{itemize}
-    \item RL
-    \item mdp
-    \item cvar
-    \item others
-\end{itemize}
+
+Standard reinforcement learning approaches aim to find policies which maximize the expected cumulative reward.
+However, this approach neither takes into account variability of the reward around its mean
+neither sensitivity of the policy to modelling errors.\\
+In this thesis, we change the objective function of the
+standard RL approach to one that optimizes another metric of the reward distribution which
+takes into account the risk of the actions taken by the agent.
+While several metrics have been designed to assess risk, we will focus on a particular risk metric
+called Conditional Vale at Risk (CVaR).\\
+We, thereby, present a RL algorithm that aims to find policies with optimal CVaR.
 
 \subsection{Reinforcement Learning}
 
@@ -24,111 +28,107 @@ actions and rewards.
 
 MDPs  are discrete-time stochastic control processes which provide a
 mathematical framework for modeling sequential decision making in situations where outcomes are
-partly random and partly under the control of a decision maker and where actins influence not only immediate rewards,
-but also subsequent situation or states, and subsequently, future rewards.
-
-The state transitions of an MDP \todo{can be called an MDP if doesnt satisfy Markov Property?}
-satisfy the Markov property, for which given the state s and action a the set of transition
-probabilities to next states depend only on the current state and action of the system,
-but are conditionally independent of all previous states and actions. Hence, the state must provide information about 
-all aspects of the past agent-environment interaction that make a difference for the future.
-
+partly random and partly under the control of a decision maker and where actions influence not only immediate rewards,
+but also future ones.\\
 An MDP is defined by a tuple ($\mathcal{S,A},R,P,\gamma$), where $\mathcal{S,A}$ are the
 state and action spaces respectively, $R(x,a)$ is the reward distribution, $P(\cdot |x,a)$ is
-the transition probability distribution and $\gamma \in [0,1]$ is the discount factor.  
+the transition probability distribution and $\gamma \in [0,1]$ is the discount factor. 
+
+State transitions of an MDP satisfy the Markov property, in which
+the set of transition probabilities to next states depend only on the current state and action of the system,
+but are conditionally independent of all previous states and actions. Hence, the state must
+provide information about all aspects of the past agent-environment interaction that
+make a difference for the future.
 
 Solving an MDP involves determining a sequence of policies $\pi$ (mapping states to actions)
-that maximizing an objective function.
+that maximize an objective function.
 A commonly considered class of policies in literature are the class of Markovian policies $\Pi_M$ where
-at each time-step t the policy $\mu_t$ is a function that maps state $x_T$ to the probability distribution over the action
-space $\mathcal{A}$. 
-In the special case when the policies are time-homogeneous, i.e. $\mu_j = \mu for all j \geq 0$ then the
-class of policies is known as stationary Markovian $\Pi_{M,S}$. This set of policies,
-under which actions only depend on current state information and its state-action mapping is time-independent, 
-which makes solving for an optimal policy more tractable and common solution techniques involve dynamic programming algorithsm
-such as Bellman iteration.
-When the objective function is given by a risk-neutral expectation of cumulative cost,
-ie:
+at each time-step \textit{t} the policy $\pi_t$ is a function that maps state $x_t$ to 
+the probability distribution over the action space $\mathcal{A}$. 
+In the special case when the policies are time-homogeneous, i.e. $\pi_j = \pi \; \forall j \geq 0$ then the
+class of policies is known as stationary Markovian $\Pi_{M,S}$.\\
+This set of policies, under which actions only depend on current state information and
+its state-action mapping is time-independent, makes the problem of solving for an optimal policy more
+tractable and common solution techniques involve dynamic programming algorithms \citep{Bertsekas1995}
+such as Bellman iteration.\\
+When the objective function is given by a risk-neutral expectation of cumulative reward,
+i.e.:
 \begin{equation}
     \underset{\pi \in \Pi_H}{\min} \mathbb E  \big [  \sum_{t=0}^{\infty} \gamma^t R(x_t,a_t) | x_0, a_t \sim \pi_t(\cdot |h_t)  \big]
 \end{equation} 
 
-where $ \Pi_H$represents the set of all history-dependant policies,
+where $ \Pi_H$ represents the set of all history-dependant policies,
+the Bellman's principle of optimality \citep{Bertsekas1995} shows that the optimal
+policy lies in the class of stationary Markovian policies $\Pi_{M,S}$
 
-the Bellman's principle of optimality \citep{Bertsekas1995} shows that that the optimal policy lies in the class of stationary Markovian
-policies $\Pi_{M,S}$
-
-When dealing with other types of objective functions, that aim towards more risk-sensitive
-policies by adding constrains in the risk-neutral objective function, these nice properties doesn't normally hold
-and require extra mathematical formulations, such as state augmentation \citep{Chow2015}.
+When dealing with other types of objective functions that aim towards more risk-sensitive
+policies, these nice properties doesn't normally hold
+and require extra mathematical formulations, such as MDP state augmentation \citep{Chow2015}.
 
 
 
 \section{Risk}
 Standard reinforcement learning agents aim to maximize the expected cumulative reward and hence
 do not take risk into account. In some scenarios the shape of the reward distribution might be unimportant,
-since highly different distributions still can have same expectation. However, in real world scenarios, in  when catastrophic losses can occur,
-risk must be taken into account.
-Risk describes the uncertainty of an outcome.
+since highly different distributions still can have same expectation. However, in real world scenarios, 
+in  when catastrophic losses can occur, risk must be taken into account.\\
 We can find 3 types of strategies with respect to risk, namely \textit{risk neutral, risk averse} and \textit{risk seeking}
 
-As an example, suppose a game show participant may choose one of two doors, one that hides 1000CHF
-and one that hides 0CHF. Further suppose that the host also allows the contestant to 
+As an example, suppose a participant in a game is told to choose between two doors.
+One door hides 1000CHF and the other 0CHF. The host also allows the contestant to 
 take 500CHF instead of choosing a door. The two options (choosing between door 1 and door 2, or taking 500CHF)
-have the same expected value of 500CHF.
-Since the expected value is the same, risk neutral contestant is indifferent between these choices. 
-A risk-averse contestant will accept the guaranteed 500CHF, while a risk-seeking
-contestant will derive utility from the uncertainty and will therefore choose a door. 
+have the same expected value of 500CHF. But it can clearly be seen that the risk among two options is different.
+Since the expected value is the same, risk neutral contestant is indifferent between these choices.
+A risk-seeking contestant will maximize its utility from the uncertainty and hence choose a door,
+whereas the risk-averse contestant  will accept the guaranteed 500CHF.
 
 We can segment RL algorithms accounting for risk in two main categories: the first transform 
-the optimization criterion to introduce the concept of risk. The second, modifies the exploration process to avoid
-exploratory actions that can lead to undesirable situations.
-We will focus on the first category, which can be divided into subcategories: worst-case criterion, risk-sensitive criterion
-and constrained criterion.
-Worst-case or minimax criterion has been studied by \citep{Heger1994}, \citep{Coraluppi1999},\citep{Coraluppi1997},
+the optimization criterion to introduce the concept of risk, whereas the second, modifies the exploration
+process to avoid exploratory actions that can lead to undesirable situations.\\
+We will focus on the first category, which can be divided into 3 subcategories: worst-case criterion,
+constrained criterion and risk-sensitive criterion.\\
+Worst-case or minimax criterion has been studied by \citet{Heger1994}, \citet{Coraluppi1997} and \citet{Coraluppi1999},
 in which the objective is to compute a control policy that maximizes the expectation of the return
-with respect to the worst case scenario.
-In general, minimax criterion has been found to be too restrictive as it takes into
-account severe but extremely rare events which may never occur.
-
+with respect to the worst case scenario. In general, minimax criterion has been found to be too restrictive as it takes into
+account severe but extremely rare events which may never occur.\\
 Constrained criterion  aims to maximize the expectation of the return while keeping other types of expected
 utilities higher than some given bounds \citep{Altman1993}. It may be seen as finding the best policy $\pi$
-in the space of considered safe policies. This space, may be restricted by different constraints: ensuring that
-the expectation of return exceeds some specific minimum threshold  (Kadota et al, Geibel 2006, Delage and Mannor, Ponda et al.)
-or that te variance of return doesn't exceed a given threshold (Castro et al 2012). This constraint problems
-can be converted to equivalent unconstrained ones by using penalty methods or Lagrangian approach.
-
-Finally, risk-sensitive criterion use other utility metrics instead of expectation to be maximized.
-Lot of research was done using exponential utility functions (howard and Mthesor, CHung an Sboel). 
-However, most of workin this trend is within the MDP framework where transition
-probabilities and rewards are explicitly available, hence the use of tis criterion
-for model-free RL is not straight-forward.
-
+in the space of considered safe policies. This space may be restricted by different constraints: ensuring that
+the expectation of return exceeds some specific minimum threshold \citep{Geibel2006}
+or that te variance of return doesn't exceed a given threshold \citep{Tamar2012}. This constraint problems
+can be converted to equivalent unconstrained ones by using penalty methods or a Lagrangian approach.\\
+Finally, risk-sensitive criterion use other utility metrics to be maximized instead of expectation of cumulative rewards.
+Lot of research has been done using exponential utility functions \citep{Howard1972,Chung1987}. \\
 A risk metric that has recently gained a lot of popularity is the Conditional Value at Risk,
 due to its favorable computation properties and superior ability to safeguard a
-decision maker from the "outcomes that hurt the most" \cite{Serraino2013}.
+decision maker from the "outcomes that hurt the most" \cite{Serraino2013}.\\
 In this thesis we present an optimization approach for this metric.
 
 \subsection{Conditional Value-at-Risk (CVaR)}
 
-Let Z be a bounded-mean random variable, i.e $\mathbb E[|Z|] < \infty$, on a probability space $(\Omega, \mathbb F, \mathbb P)$, with cumulative distribution
-function $F(z) = \mathbb P (Z \leq z)$. We interpret Z as a reward.
-The value-at-risk (VaR) at confidence level $\alpha \in (0,1) $ is the $\alpha$ quantile of Z, i.e, 
+Let Z be a bounded-mean random variable, i.e $\mathbb E[|Z|] < \infty$, on a probability space 
+$(\Omega, \mathbb F, \mathbb P)$, with cumulative distribution
+function $F(z) = \mathbb P (Z \leq z)$. We interpret Z as the reward distribution.
+The value-at-risk (VaR) at confidence level $\alpha \in (0,1) $ is the $\alpha$-quantile of Z, i.e, 
 $\text{VaR}_\alpha (Z) = \inf \{ z \hspace{1mm} | \hspace{1mm}F(z) \geq  \alpha  \}$.
 The conditional value-at-risk (CVaR) at confidence level $\alpha \in (0,1) $ is defined as
 the expected reward of outcomes worse than the $\alpha$-quantile ($\text{VaR}_\alpha$):
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\beta) d\beta=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\beta (Z) d\beta
+    \text{CVaR}_\alpha (Z) = \mathbb E [Z | Z \leq \text{VaR}_\alpha]= \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\beta) d\beta=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\beta (Z) d\beta
  \end{equation}
+While both VaR and CVaR are risk measures, only CVaR is coherent in the sense of \citet{Artzner1999}.
+In addition, CVaR takes into account the possibility of tail events where losses exceeds VaR whereas VaR
+is incapable of distinguishing situations beyond it.
 
- Rockafellar and Uryasev \cite{Rockafellar2000} also showed that CVaR is equivalent to the solution of
- the following optimization problem:
+Given its properties, \citet{Rockafellar2000} also showed that CVaR is equivalent to the solution of
+the following optimization problem:
 
 \begin{equation}
     \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\}
 \end{equation}
 
-where $(x)^- = \min(x,0)$. In the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.
+where $(x)^- = \min(x,0)$.\\
+In the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.
 
 A useful property of CVaR, is its alternative dual representation \cite{Artzner1999}:
 
@@ -136,48 +136,78 @@ A useful property of CVaR, is its alternative dual representation \cite{Artzner1
     \text{CVaR}_\alpha (Z) = \underset{\xi \in U_{\text{CVaR}} (\alpha, \mathbb{P})} \min \mathbb E_\xi[Z]
 \end{equation}
 
-where $\mathbb E_\xi[Z]$ denotes the $\xi$-weighted expectation of Z, and the risk envelope $U_\text{CVaR}$ is
+where $\mathbb E_\xi[Z]$ denotes the $\xi$-weighted expectation of $Z$, and the risk envelope $U_\text{CVaR}$ is
 given by:
 
 \begin{equation}
     U_{\text{CVaR}}(\alpha, \mathbb{P}) = \Big\{\xi | \xi(w)  \in \big [ 0, \frac{1}{\alpha} \int_{w\in\Omega} \xi(w)\mathbb{P}(w)dw=1   \big ] \Big\}
 \end{equation}
 
-Thus, the CVaR of a random variable may be interpreted as the worst case expectation of Z, under
+Thus, the CVaR of a random variable may be interpreted as the worst case expectation of $Z$, under
 a perturbed distribution $\xi \mathbb{P}$.
 
-Due to its previously mentioned properties, CVaR optimization has recently gained a lot interest in the
-risk-sensitive literature. However, most of the work has been done in the context of MDPs When
-the model is known, and not much research has been done for the RL framework.
+Due to its superior mathematical properties and practical implications, CVaR optimization has gained a lot interest in the
+risk-sensitive literature.\\
+CVaR optimization aims to find the parameters $\theta$ that maximizes $\text{CVaR}_\alpha (Z)$, where the
+reward distribution $Z$ is parameterized by a controllable parameter $\theta$, such that: $Z = f(X; \theta)$.\\
+In the simplest scenarios, where $X$ is not dependant on $\theta$ CVaR optimization may be solved using
+various approaches such in \citet{Rockafellar2000}.\\
+However, in many domains, such as reinforcement learning, the tunable parameter $\theta$ also affects the 
+distribution of $X$, and hence the standard existing approaches for CVaR optimization are not suitable.\\
+Additionally, most of the work in these domains, has been done in the context of MDPs when
+the model is known \citep{Chow2015, Petrik2012}, by using dynamic programming methods
+and not much research has been done for the RL framework.
 
-\citet{Morimura2010}\citet{Morimura2010b}, focus on estimating the density of the returns,
-which allows them to handle CVaR risk criteria. However the resulting distributional-SARSA-with-CVaR algorithm
-has  proved  effectiveness  only  in  a  very  simple  and discrete MDP with 14 states.
-\citet{Petrik2012} proposes a dynamic programme \todo{not RL so maybe remove from the section}
-method for optimizing CVaR in large MDPs but it only holds for linearly-controllable problems.
+\citet{Morimura2010a} and \citet{Morimura2010b}
+focused on estimating the density of the returns
+to handle CVaR risk criteria. However the resulting distributional-SARSA-with-CVaR algorithm they propose
+has  proved  effectiveness  only  in  very  simple  and discrete MDP.\\
+\citet{Tamar2015a} proposed a policy gradient (PG) algorithm for CVaR optimization, by deriving a 
+sampling based estimator for the gradient of CVaR and used it to optimize the CVaR by stochastic gradient descent.
+However they only considered continuous loss distributions and they used empirical $\alpha$-quantile to estimate 
+$\text{VaR}_\alpha$ which is known to be a biased estimator for small samples.\\
+\citet{Chow2014} also proposed a PG algorithm for mean-CVaR optimization, which has several disadvantages
+also shared with \citet{Tamar2015}. First, by definition of PG algorithms, they suffer from
+high variance on the gradient estimates, especially when the trajectories are long. This high variance
+is even more exacerbated when using very low quantiles $\alpha$ for the CVaR 
+since the averaging on the rewards is effectively only on $\alpha$N samples.
+Second, they are both very sample inefficient since only the rewards below the quantile
+are used to compute the gradient.\\
+Third, they are both trajectory-based (not incremental), 
+i.e they only update after observing one or more full trajectories.\\
+\citet{Chow2014} also proposed both a trajectory-based and incremental actor-critic approaches which help
+in reducing the variance of PG algorithms. However, they require state augmentation of the original MDP formulation to a
+state-space $\mathcal{X} \times \mathcal{Y}$ where 
+$\mathcal{Y} = (0,1]$ is an additional continuous state that represents the different confidence levels. 
+This allows to include as a critic the CVaR value function and it is necessary due to 
+the time-inconsistency of CVaR metric.
+It is also important to be noticed, that all the aforementioned algorithms are on-policy approahces.
+This is first another source of sample inefficiency
+because they cannot exploit data from experts or other sources. Additionally they constraint the 
+learning process to happen online while interacting with the environment, which in real-case scenarios,
+for example robotics, can lead to very detrimental situations for the robot and hence it is,
+paradoxically, risky.
 
-\citet{Tamar2015a} proposed a policy gradient algorithm for CVaR optimization, however they only consider continuous loss
-distributions, uses a biases estimator for VaR and it is not incremental \todo{mentioned in Chow: algs for CVar optim in MDPs}
+Most recently, \citet{Dabney2018b} presented a distributional RL approach to train risk-averse and risk-seeking agents,
+using, among others, CVaR as risk objective. The approach uses Q-learning
+and hence, it is only suitable for discrete action spaces.
 
-We focus on the importance of \textit{value distribution}, the distribution of the random return received by a RL
-agent, in contrast to the common approach in RL of modelling the expectation of this return.
-The latter neither takes in to account the variability of the cost (i.e fluctuations around the mean), nor its sensitivity to modeling errors. \cite{Chow2015}
-
-We aim to learn this distribution and try to minimize other metrics rather than its mean, which can be crucial for some environments 
-in which ensuring that the cost is always above a certain value with certain probability is crucial.
-
-
-
+We work towards sample efficient RL algorithms that can learn optimal CVaR policies.
+no biased alpha quantile since it is estimated by the Z distribution not sampled
+off--policy
+deterministic
+continuous actions
+incremental
 
 
-% Safe RL can be defined as the process of learning policies that maximize the expectation
-% of the return in problems in which it is important to ensure reasonable system performance
-% and/or respect safety constraints during the learning and/or deployment processes
+In this thesis, we present an off-policy approach for CVaR optimization using actor-critic approach based on the DPG algorithm.
+Instead of estimating the VaR empirically from the observed rewards or using CVaR Bellman equations,
+we rely on the recent advances on distributional RL  \citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
+\textit{value distribution} (i.e. the distribution of the random return received by a RL agent) and from there, compute the
+\todo{too ambiguous/incorrect?} \textit{estimated empirical} CVaR.
 
-we manage to show that by specifying an augmented state that keeps track of the risk evaluation in
-subsequent stages, the optimal policies of the corresponding CMDPs indeed belong to the class of stationary
-Markovian policies (with respect to the augmented states), for the risk-sensitive objective functions and
-constraints considered in this thesis
 
-n both finite and infinite horizon MDPs, there exists a deterministic history-dependentoptimal
-policy for CVaR optimization Bauerle and Ott.
+
+
+
+

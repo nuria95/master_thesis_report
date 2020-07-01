@@ -114,7 +114,7 @@ $\text{VaR}_\alpha (Z) = \inf \{ z \hspace{1mm} | \hspace{1mm}F(z) \geq  \alpha 
 The conditional value-at-risk (CVaR) at confidence level $\alpha \in (0,1) $ is defined as
 the expected reward of outcomes worse than the $\alpha$-quantile ($\text{VaR}_\alpha$):
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \mathbb E [Z | Z \leq \text{VaR}_\alpha]= \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\beta) d\beta=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\beta (Z) d\beta
+    \text{CVaR}_\alpha (Z) = \mathbb E [Z | Z \leq \text{VaR}_\alpha]= \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\tau) d\tau=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\tau (Z) d\tau \label[]{eq:cvar_defs}
  \end{equation}
 While both VaR and CVaR are risk measures, only CVaR is coherent in the sense of \citet{Artzner1999}.
 In addition, CVaR takes into account the possibility of tail events where losses exceeds VaR whereas VaR
@@ -124,7 +124,7 @@ Given its properties, \citet{Rockafellar2000} also showed that CVaR is equivalen
 the following optimization problem:
 
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\}
+    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\} 
 \end{equation}
 
 where $(x)^- = \min(x,0)$.\\
@@ -181,7 +181,7 @@ state-space $\mathcal{X} \times \mathcal{Y}$ where
 $\mathcal{Y} = (0,1]$ is an additional continuous state that represents the different confidence levels. 
 This allows to include as a critic the CVaR value function and it is necessary due to 
 the time-inconsistency of CVaR metric.
-It is also important to be noticed, that all the aforementioned algorithms are on-policy approahces.
+It is also important to be noticed, that all the aforementioned algorithms are on-policy approaches.
 This is first another source of sample inefficiency
 because they cannot exploit data from experts or other sources. Additionally they constraint the 
 learning process to happen online while interacting with the environment, which in real-case scenarios,

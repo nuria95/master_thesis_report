@@ -1,0 +1,101 @@
+\section{Technical Details of the algorithm}
+The algorithm uses neural networks as non-linear function approximators for both the actor and the critic.
+To make effective use of large neural networks, we use insights fom the DeepDPG algorithm \cite{Lillicrap2016} and in its turn
+from Deep Q Network (DQN) \citep{Mnih2015}.
+Before DQN, RL was believed to be unstable or diverge when nonlinear function approximators such as neural networks were used.
+The instability has several causes.First, correlation in the sequence of observations occurring when
+samples ar generated from exploring sequentially in an environment (hence i.i.d assumption is violated).
+Second, non-stationary data distribution since small updates in Q network may significantly change the policy and hereby, the data distribution.
+And third, correlation between the action-values and the target values during temporal difference backups since same network is being used.
+These 3 issues are solved by adding 2 innovations: 1)  \textit{experience replay buffer}: the network is trained by sampling 
+batches of random past observations from a buffer, hereby removing correlations in the observation sequence and smoothing over
+changes in the data distribution.
+2) use \textit{target Q networks} that are only periodically updated, to update the Q network during temporal difference backups to reduce
+correlations with the target.
+
+Observations $(x_t,a_t,r_t,x_{t+1})$ were sampled from the environment when acting under behavior policy $\beta$ and stored
+in a fixed-sized (we used size of $10^6$). When full, oldest samples were discarded.
+Since the algorithm is off-policy, the buffer can be large, allowing the algorithm to benefit from
+learning across a set of uncorrelated transitions.
+Exploration was addressed by constructing an exploratory behavior policy $\beta$ by adding noise $\eta$ to the actor policy.
+
+\begin{equation}
+    \beta(x_t)=\pi(x_t| \theta^\pi) + \eta
+\end{equation}
+where $\eta$ is sampled from a noise process. In our case, as in \citet{Lillicrap2016},we
+used an Ornstein-Uhlenbeck process \citep{Uhlenbeck1930} with $\theta = 0.15$ and $\sigma=0.3$ with exponential decay.
+Ornstein-Uhlenbeck process models the velocity of a Brownian particle with friction, which results in temporally correlated
+values centered around the mean ($\mu$=0.) \todo{explain more?}
+
+At every training step, a minibatch of observations is sampled from the buffer.
+To estimate the target value for critic training, we use two target networks:  \textit{critic target network} and \textit{actor target network}
+($\hat{Z}(x,a;\tau | \theta^{\hat{Z}})$ and  $\hat{\pi}(x | \theta^{\hat{\pi}})$) which are initialized
+as their homologues \todo{rename?}, but constrained to slowly track the learnt networks, so that to stabilize learning.
+With this goal, weights of target networks are updated "softly", via:
+$\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
+
+We additionally, use two insights from TD3 \citet{Fujimoto2018}.
+First, we update the policy and target networks less frequently than the critic network. As 
+\citet{Fujimoto2018} recommends we do one policy and target networks updates for every 
+two critic network updates. 
+
+Second, we use target policy smoothing to address a particular failure mode that can happen
+in DeepDPG. To prevent policy to exploit 
+actions for which the critic overestimated its value, target policy smoothing adds noise to target actions
+to smooth out Q over similar actions. Specifically target action used for the TD backup:
+\begin{equation}
+    a_{t+1}=\hat{\pi}(x_{t+1} | \theta^{\hat{\pi}} + \text{clip}(\epsilon, -c, c) \quad \epsilon \sim \mathcal{N}(0,\sigma)
+\end{equation}
+where we experimentally set $c=0.5$ and $\sigma=0.2$ and $\mathcal{N}(0,\sigma)$ is a
+Gaussian distribution with mean=0 and standard deviation $\sigma$.
+
+
+To compute the quantile regression loss, we used N'=N=32 quantile levels to sample from
+target and critic networks.This parameter must be kept relatively big but further increasing
+it doesn't seem to improve performance.
+To compute the empirical CVaR from the estimated value distribution 
+$Z(x,a; \tau) | \theta^Z)$, we use K=8 quantile levels.
+
+
+Training starts after a warm-up of T=25000 environment interactions. During this time, actor
+networks where not used but random policies where used instead, to enhance exploration.
+Adam optimizer wsa used for learning the neural networks parameters with a learning rate of $10^-4$ and $10^-3$
+for the actor and the critic respectively.
+For additional information on the networks used, please see Appendix \ref{chap:appendix}
+
+
+
+
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwResult{Write here the result }
+ initialization\;
+ \While{While condition}{
+  instructions\;
+  \eIf{condition}{
+   instructions1\;
+   instructions2\;
+   }{
+   instructions3\;
+  }
+ }
+ \caption{How to write algorithms}
+\end{algorithm}
+
+
+
+
+
+From a practical viewpoint, using stochastic policies requires integrating over both
+state and action spaces to compute the policy gradient, whereas the deterministic case
+only needs to integrate over the state space. Hence, stochastic policy gradients
+may require much more samples, especially if the action space has many dimensions.
+
+
+
+use replay buffer, target networks as DQN to deal with problems of Q-learning with functions approximators.
+
+Since distorted expectations can be expressed as weighted average over the quantiles \cite{Dhaene2012},
+we can use a specific sampling base distribution $\beta: [0,1] \ra [0,1]$
+to sample the quantile levels $\tau \in[0,1])$ from our critic network $Z(x,a; \tau)$.

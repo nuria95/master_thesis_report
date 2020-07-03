@@ -6,7 +6,8 @@ Decision-making is the process of taking choices by identifying an optimal strat
 from current system states. A crucial element in the process is the performance measure used
 to assess how good the choice is for the decision-maker or \textit{agent}.
 In sequential decision-making problems, the most common optimization criterion is the 
-expectation of the cumulative reward collected by the agent through a whole sequence
+expectation of the cumulative reward (also called \textit{return}) 
+collected by the agent through a whole sequence
 of interactions with the environment.
 
 
@@ -16,63 +17,136 @@ maximize, generally, the expected cumulative reward.\\
 When an agent interacts with the environment, different sources of irreducible 
 randomness are introduced due to modelling errors or inherent stochasticity of the same.
 Notion of risk in RL is related to the fact that even an optimal policy with respect to the 
-expected cumulative reward may perform poorly in some cases.
-Since maximizing the expected cumulative reward does not necessarily imply the avoidance of rare occurrences of large negative outcomes,
+expected return may perform poorly in some cases.
+Since maximizing the expected return does not necessarily imply the avoidance
+of rare occurrences of large negative outcomes,
 we need other criteria to evaluate risk. \citep{Garcia2015}.
 
 Risk-sensitive decision-making provides a promising
 approach to compute robust and safe policies, essential in safety-critical applications,
 such as autonomous navigation.
-However, finding computationally tractable and conceptually meaningful methodologies for such a
-goal is non-trivial and still a challenge.
+However, finding computationally tractable and conceptually meaningful methodologies for
+such a goal is non-trivial and still a challenge.
 
-We propose an approach to find risk-sensitive policies by modifying the
-objective function to optimize a risk metric, namely the Conditional Value at Risk (CVaR)
-instead of the usual expected value.
-Non-formally, CVaR of a distribution at confidence level $\alpha$ can be defined as the expected
-reward of outcomes worse than the $\alpha$-tail of the distribution.
-CVaR is a risk metric that has gained a lot of popularity due to its mathematical properties,
-which makes its computation and optimization much easier than for other metrics  \citep{Rockafellar2000}. For example, 
+We can segment RL algorithms accounting for risk in two main categories: the first transform 
+the optimization criterion to introduce the concept of risk, whereas the second, modifies
+the exploration process to avoid exploratory actions that can lead to undesirable situations.\\
+We will focus on the first category, which can be divided into 3 subcategories: worst-case
+criterion, constrained criterion and risk-sensitive criterion.\\
+Worst-case or minimax criterion has been studied by \citet{Heger1994}, 
+\citet{Coraluppi1997} and \citet{Coraluppi1999},
+in which the objective is to compute a control policy that maximizes the expcted return
+with respect to the worst case scenario. In general, minimax criterion has
+been found to be too restrictive as it takes into
+account severe but extremely rare events which may never occur.\\
+Constrained criterion  aims to maximize the expected return while keeping
+other types of expected utilities higher than some given bounds \citep{Altman1993}.
+It may be seen as finding the best policy $\pi$ in the space of considered safe policies.
+This space may be restricted by different constraints such as ensuring that
+the expectation of costs \citep{Geibel2006} or the variance of return doesn't exceed
+a given threshold \citep{Tamar2012}.
+This constraint problems can be converted to equivalent unconstrained ones by using
+penalty methods or a Lagrangian approach.
+
+Finally, risk-sensitive criterion uses other utility metrics to be maximized instead of
+expectation of cumulative rewards.
+Lot of research has been done using exponential utility functions
+\citep{Howard1972,Chung1987}.\\
+Our approach aims to maximize
+another risk metric, namely the Conditional Value at Risk (CVaR).
+Non-formally, CVaR of a return distribution at confidence level $\alpha$ can be defined as the expected
+cumulative reward of outcomes worse than the $\alpha$-tail of the distribution.
+CVaR has recently gained a lot of popularity due to its mathematical properties \citep{Artzner1999},
+which makes its computation and optimization much easier than for other metrics  \citep{Rockafellar2000}.
+For example, 
 it has recently been identified by \citet{Majumdar2020} as a suitable metric
 for measuring risk in robotics.
 
-The CVaR optimization algorithm that we introduce has 2 main properties that so far, we do not have
-knowledge any other algorithm for CVaR optimization in the RL setting has; namely,
-being an off-policy algorithm and using deterministic policies.\\
+CVaR optimization aims to find the parameters $\theta$ that maximizes 
+$\text{CVaR}_\alpha (Z)$, where the return distribution $Z$ is parameterized by a 
+controllable parameter $\theta$ such that: $Z = f(X; \theta)$.\\
+In the simplest scenarios, where $X$ is not dependant on $\theta$ CVaR optimization may 
+be solved using various approaches such as in \citet{Rockafellar2000}.\\
+However, in RL, the tunable parameter $\theta$ also affects the 
+distribution of $X$ and therefore, the standard existing approaches for CVaR optimization 
+are not suitable.\\
+Additionally, most of the work with such a goal has been done in the context of MDPs when
+the model is known  by using dynamic programming methods \citep{Chow2015, Petrik2012},
+and not much research has been done for the RL framework.
+
+Under the RL framework, \citet{Morimura2010a} and \citet{Morimura2010b}
+focused on estimating the density of the returns
+to handle CVaR risk criteria. However, the resulting distributional-SARSA-with-CVaR algorithm
+they propose has  proved  effectiveness  only  in  very  simple  and discrete MDPs.\\
+\citet{Tamar2015a} proposed a policy gradient (PG) algorithm for CVaR optimization, by
+deriving a sampling based estimator for the gradient of CVaR and using it to optimize the
+CVaR via stochastic gradient descent. However, they only considered continuous loss distributions
+and they used empirical $\alpha$-quantile to estimate 
+$\text{VaR}_\alpha$ which is known to be a biased estimator for small samples.\\
+\citet{Chow2014} also proposed a PG algorithm for mean-CVaR optimization, which has several
+disadvantages also shared with \citet{Tamar2015}. First, by definition of PG algorithms,
+they suffer from high variance on the gradient estimates, especially when the trajectories
+are long. This high variance is even more exacerbated when using very low quantiles $\alpha$ for the CVaR 
+since the averaging on the rewards is effectively only on $\alpha$N samples.
+Second, they are both very sample inefficient since only the rewards below the quantile
+are used to compute the gradient. Third, they are both trajectory-based (not incremental), 
+i.e they only update after observing one or more full trajectories.\\
+\citet{Chow2014} also proposed both a trajectory-based and incremental actor-critic
+approaches which help in reducing the variance of PG algorithms. However, they require
+state augmentation of the original MDP formulation to a state-space
+$\mathcal{X} \times \mathcal{Y}$ where $\mathcal{Y} = (0,1]$ is an additional continuous
+state that represents the different confidence levels. 
+This allows to include as a critic the CVaR value function and it is necessary due to 
+the time-inconsistency of CVaR metric.
+It is also important to be noticed that all the aforementioned algorithms are on-policy approaches.
+This is first another source of sample inefficiency
+because they cannot exploit data from experts or other sources. Additionally they
+constraint the learning process to happen online while interacting with the environment,
+which in real-case scenarios, it is paradoxically risky.
+
+The CVaR optimization algorithm that we introduce has 2 main properties that so far,
+we do not have knowledge any other algorithm for CVaR optimization in the RL setting has; 
+namely, being an off-policy algorithm and using deterministic policies.\\
 Being off-policy means that the algorithm can learn the optimal policy from data collected
 from another policy. Hence, we can use a more exploratory \textit{behavior} policy to interact
 with the environment and collect observations, and then use them to train
 the optimal \textit{target} policy. 
 Additionally to the fact of making exploration easier compared to on-policy algorithms,
-being off-policy allows the possibility to learn from data generated by a conventional non-learning controller
-or from a human expert.
-This application is really appealing when working with risky environments and when we do not want to 
-expose the learning agent to its risks at the earlier stages of the learning process.
+being off-policy allows the possibility to learn from data generated by a conventional
+non-learning controller or from a human expert, setting mostly called in literature as
+\textit{Batch RL} or \textit{offline RL}.
+This application is really appealing when working with risky environments, when we do
+not want to expose the learning agent to its risks at the earlier stages of the learning
+process.
 
 
 The second property is the fact that we use a target policy which is deterministic.
-Using stochastic policies is not natural in many applications and it could increase the variance
-of the return \todo{\citet{Feinberg2008}/\citet{Taleghan2018}/nothing}.
+Using stochastic policies is not natural in many applications and it
+could increase the variance of the return \todo{\citet{Feinberg2008}/\citet{Taleghan2018}/nothing}.
 When again, working in an stochastic 
 environment and with the goal of finding risk-aware policies, using a policy which is stochastic 
 sounds quite counterintuitive.
 
 In this thesis, we propose a CVaR optimization approach based on a model-free, off-policy
-actor-critic algorithm using deep function approximators. 
-Building upon recent research in distributional RL \citep{Dabney2018b}, we design a distributional actor-critic approach
-using deterministic policy gradients. The critic is trained to estimate the whole value distribution
-and the actor is trained towards maximizing the tail of such distribution, namely the CVaR.
+deterministic actor-critic algorithm using deep function approximators. 
+Instead of empirically estimating the VaR from the observed rewards or using the CVaR
+Bellman equation, we build upon recent research in distributional RL 
+\citep{Bellemare2017,Dabney2018a,Dabney2018b}
+to estimate the full
+\textit{value distribution} (i.e. the distribution of the random return received by a RL agent).
+A critic learns a parameterization of the value distribution and 
+the actor, is trained towards policies that maximize the CVaR of the returns 
+by sampling from the parameterized value distribution and performing stochastic gradient ascent.
 
 We show algorithm performance in two different settings.
 First, in the most common off-policy RL setting in which the environment simulator is given and
 the agent can interact with it to collect new data from time to time.
 Second, and most powerful, the agent is trained completely offline by using an external
-dataset and when no further interaction with the environment is allowed.
+dataset and no further interaction with the environment is allowed.
 For the 2 settings, the algorithm learns risk-sensitive policies in
 complex high-dimensional, continuous action spaces
 such as for some modified environments from the Open AI Gym toolkit and from D4RL,
 a recent suite of tasks and datasets for benchmarking progress in offline RL.
-
 
 
 

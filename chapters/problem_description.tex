@@ -82,45 +82,37 @@ Since the expected value is the same, risk neutral contestant is indifferent bet
 A risk-seeking contestant will maximize its utility from the uncertainty and hence choose a door,
 whereas the risk-averse contestant  will accept the guaranteed 500CHF.
 
-We can segment RL algorithms accounting for risk in two main categories: the first transform 
-the optimization criterion to introduce the concept of risk, whereas the second, modifies the exploration
-process to avoid exploratory actions that can lead to undesirable situations.\\
-We will focus on the first category, which can be divided into 3 subcategories: worst-case criterion,
-constrained criterion and risk-sensitive criterion.\\
-Worst-case or minimax criterion has been studied by \citet{Heger1994}, \citet{Coraluppi1997} and \citet{Coraluppi1999},
-in which the objective is to compute a control policy that maximizes the expectation of the return
-with respect to the worst case scenario. In general, minimax criterion has been found to be too restrictive as it takes into
-account severe but extremely rare events which may never occur.\\
-Constrained criterion  aims to maximize the expectation of the return while keeping other types of expected
-utilities higher than some given bounds \citep{Altman1993}. It may be seen as finding the best policy $\pi$
-in the space of considered safe policies. This space may be restricted by different constraints: ensuring that
-the expectation of return exceeds some specific minimum threshold \citep{Geibel2006}
-or that te variance of return doesn't exceed a given threshold \citep{Tamar2012}. This constraint problems
-can be converted to equivalent unconstrained ones by using penalty methods or a Lagrangian approach.\\
-Finally, risk-sensitive criterion use other utility metrics to be maximized instead of expectation of cumulative rewards.
-Lot of research has been done using exponential utility functions \citep{Howard1972,Chung1987}. \\
-A risk metric that has recently gained a lot of popularity is the Conditional Value at Risk,
-due to its favorable computation properties and superior ability to safeguard a
-decision maker from the "outcomes that hurt the most" \cite{Serraino2013}.\\
-In this thesis we present an optimization approach for this metric.
+
+In this thesis we present an algorithm to find risk-sensitive policies
+that maximize the CVaR of the reward distribution.
 
 \subsection{Conditional Value-at-Risk (CVaR)}
 
 Let Z be a bounded-mean random variable, i.e $\mathbb E[|Z|] < \infty$, on a probability space 
-$(\Omega, \mathbb F, \mathbb P)$, with cumulative distribution
-function $F(z) = \mathbb P (Z \leq z)$. We interpret Z as the reward distribution.
-The value-at-risk (VaR) at confidence level $\alpha \in (0,1) $ is the $\alpha$-quantile of Z, i.e, 
-$\text{VaR}_\alpha (Z) = \inf \{ z \hspace{1mm} | \hspace{1mm}F(z) \geq  \alpha  \}$.
+$(\Omega, \mathcal{F}, \mathbb P)$, with cumulative distribution
+function $F_Z(z) = \mathbb P (Z \leq z)$. We interpret Z as the reward distribution and for convenience 
+we assume that is a continuous random variable meaning that $F_Z(z)$ is everywhere continuous.
+The value-at-risk (VaR) at confidence level $\alpha \in (0,1) $ is the $\alpha$-quantile of Z, i.e.:
+
+\begin{equation}
+    \text{VaR}_\alpha (Z) = F_Z^{-1}(\alpha)= \inf \{ z \hspace{1mm} | \hspace{1mm}F_Z(z) \geq  \alpha  \}
+\end{equation}
+
 The conditional value-at-risk (CVaR) at confidence level $\alpha \in (0,1) $ is defined as
 the expected reward of outcomes worse than the $\alpha$-quantile ($\text{VaR}_\alpha$):
 \begin{equation}
     \text{CVaR}_\alpha (Z) = \mathbb E [Z | Z \leq \text{VaR}_\alpha]= \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\tau) d\tau=\frac{1}{\alpha} \int_{0}^{\alpha} \text{VaR}_\tau (Z) d\tau \label[]{eq:cvar_defs}
  \end{equation}
-While both VaR and CVaR are risk measures, only CVaR is coherent in the sense of \citet{Artzner1999}.
+The last equality, known as the Acerbi's integral formula for CVaR (Proposition 3.2 in \citet{Acerbi2002}),
+interprets $\text{CVaR}_\alpha$ as the integral of all the quantiles below
+the corresponding quantile level $\alpha$ and will become useful later.   \\
+While both VaR and CVaR are risk measures, CVaR has superior mathematical properties 
+(monotonicity, translation invariance, positive homogeneity and subadditivity; see \citet{Artzner1999})
+which makes CVaR computation and optimization far easier compared to VaR \citep{Rockafellar2000}.
 In addition, CVaR takes into account the possibility of tail events where losses exceeds VaR whereas VaR
 is incapable of distinguishing situations beyond it.
 
-Given its properties, \citet{Rockafellar2000} also showed that CVaR is equivalent to the solution of
+\citet{Rockafellar2000} also showed that CVaR is equivalent to the solution of
 the following optimization problem:
 
 \begin{equation}
@@ -140,71 +132,31 @@ where $\mathbb E_\xi[Z]$ denotes the $\xi$-weighted expectation of $Z$, and the 
 given by:
 
 \begin{equation}
-    U_{\text{CVaR}}(\alpha, \mathbb{P}) = \Big\{\xi | \xi(w)  \in \big [ 0, \frac{1}{\alpha} \int_{w\in\Omega} \xi(w)\mathbb{P}(w)dw=1   \big ] \Big\}
+    U_{\text{CVaR}}(\alpha, \mathbb{P}) = \Big\{\xi | \xi(w)  \in \big [ 0, \frac{1}{\alpha} \big ], \int_{w\in\Omega} \xi(w)\mathbb{P}(w)dw=1   \big ] \Big\}
 \end{equation}
 
 Thus, the CVaR of a random variable may be interpreted as the worst case expectation of $Z$, under
 a perturbed distribution $\xi \mathbb{P}$.
 
-Due to its superior mathematical properties and practical implications, CVaR optimization has gained a lot interest in the
-risk-sensitive literature.\\
-CVaR optimization aims to find the parameters $\theta$ that maximizes $\text{CVaR}_\alpha (Z)$, where the
-reward distribution $Z$ is parameterized by a controllable parameter $\theta$, such that: $Z = f(X; \theta)$.\\
-In the simplest scenarios, where $X$ is not dependant on $\theta$ CVaR optimization may be solved using
-various approaches such in \citet{Rockafellar2000}.\\
-However, in many domains, such as reinforcement learning, the tunable parameter $\theta$ also affects the 
-distribution of $X$, and hence the standard existing approaches for CVaR optimization are not suitable.\\
-Additionally, most of the work in these domains, has been done in the context of MDPs when
-the model is known \citep{Chow2015, Petrik2012}, by using dynamic programming methods
-and not much research has been done for the RL framework.
+Our goal in this thesis is to find policies that maximize the CVaR of the 
+return distribution i.e.:
+\begin{equation}
+    \arg \underset{\pi}\max \text{CVaR}_\alpha [Z (x, \pi(x))] \quad \forall x \in \mathcal{X}
+\end{equation}
 
-\citet{Morimura2010a} and \citet{Morimura2010b}
-focused on estimating the density of the returns
-to handle CVaR risk criteria. However the resulting distributional-SARSA-with-CVaR algorithm they propose
-has  proved  effectiveness  only  in  very  simple  and discrete MDP.\\
-\citet{Tamar2015a} proposed a policy gradient (PG) algorithm for CVaR optimization, by deriving a 
-sampling based estimator for the gradient of CVaR and used it to optimize the CVaR by stochastic gradient descent.
-However they only considered continuous loss distributions and they used empirical $\alpha$-quantile to estimate 
-$\text{VaR}_\alpha$ which is known to be a biased estimator for small samples.\\
-\citet{Chow2014} also proposed a PG algorithm for mean-CVaR optimization, which has several disadvantages
-also shared with \citet{Tamar2015}. First, by definition of PG algorithms, they suffer from
-high variance on the gradient estimates, especially when the trajectories are long. This high variance
-is even more exacerbated when using very low quantiles $\alpha$ for the CVaR 
-since the averaging on the rewards is effectively only on $\alpha$N samples.
-Second, they are both very sample inefficient since only the rewards below the quantile
-are used to compute the gradient.\\
-Third, they are both trajectory-based (not incremental), 
-i.e they only update after observing one or more full trajectories.\\
-\citet{Chow2014} also proposed both a trajectory-based and incremental actor-critic approaches which help
-in reducing the variance of PG algorithms. However, they require state augmentation of the original MDP formulation to a
-state-space $\mathcal{X} \times \mathcal{Y}$ where 
-$\mathcal{Y} = (0,1]$ is an additional continuous state that represents the different confidence levels. 
-This allows to include as a critic the CVaR value function and it is necessary due to 
-the time-inconsistency of CVaR metric.
-It is also important to be noticed, that all the aforementioned algorithms are on-policy approaches.
-This is first another source of sample inefficiency
-because they cannot exploit data from experts or other sources. Additionally they constraint the 
-learning process to happen online while interacting with the environment, which in real-case scenarios,
-for example robotics, can lead to very detrimental situations for the robot and hence it is,
-paradoxically, risky.
-
-Most recently, \citet{Dabney2018b} presented a distributional RL approach to train risk-averse and risk-seeking agents,
-using, among others, CVaR as risk objective. The approach uses Q-learning
-and hence, it is only suitable for discrete action spaces.
-
-In this thesis, we present an off-policy, actor-critic, model-free algorithm for CVaR optimization,
-based on the deterministic policy gradient algorithm that can operate over continuous action spaces.\\
-Instead of empirically estimating the VaR from the observed rewards or using the CVaR
-Bellman equation, we rely on the recent advances in distributional RL 
+To this end, we present an algorithm for CVaR optimization using a \textit{distributional} variant 
+of the deterministic policy gradient algorithm.
+The word \textit{distributional} emphasizes that our approach takes inspiration from the
+recent advances in distributional RL 
 \citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
 \textit{value distribution} (i.e. the distribution of the random return received by a RL agent).
-We then compute the CVaR of the current policy via sampling from the estimated value distribution
-and maximize it via stochastic gradient ascent.
-
-
-
-
-
+Having an estimation of the true value distribution, we compute the CVaR of the current policy
+via sampling from the estimated value distribution and we move the current policy
+towards maximizing it via stochastic gradient ascent.\\
+\todo{should I repeat all this? Specify that they are NN's actor/critic?}
+The CVaR dual formulation and the Acerbi's integral formula \ref{eq:cvar_defs} presented above,
+will be useful to derive our approach to compute the CVaR 
+from parameterized inverse cumulative distributions.
 
 
 

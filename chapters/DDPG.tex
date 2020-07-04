@@ -113,7 +113,7 @@ given by \cite{Degris2012} that argues that this is a good approximation since i
 preserve the set of local optima to which gradient ascent converges.
 
 
-\section{Distributional off-policydeterministic actor critic} \label{sec:distr_ddpg}
+\section{The algorithm: Distributional off-policy deterministic actor critic} \label{sec:distr_ddpg}
 We present the CVaR optimization algorithm which is the main contribution of this thesis.
 The algorithm is based on the original off-policy deterministic actor critic explained
 in previous subsection \ref{subsec:offpolicy_actor_critic}, but introduces a distributional
@@ -135,10 +135,10 @@ distribution function $F(z):=P(Z\leq z)$ and we define $F^{-1}_Z(\tau):=Z(x,a;\t
 at $\tau \in [0,1]$.
 Thus, for $\tau \in U([0,1])$, the resulting state-action return distribution sample is
 $Z(x,a;\tau)\sim Z(x,a)$.\\
-The critic IQN network $Z(x,a;\tau| \theta^Z)$ parameterized by $\theta^Z$  is hence a parametric function
+The critic IQN $Z(x,a;\tau| \theta^Z)$ parameterized by $\theta^Z$  is hence a parametric function
 used to represent the quantile function at specific quantile levels.
 
-As in \citet{Dabney2018b},we train the IQN critic network using the sampled quantile regression
+As in \citet{Dabney2018b},we train the critic IQN using the sampled quantile regression
 loss \citep{koenker2005} on the pairwise temporal-difference (TD)-errors.
 For two samples $\tau, \tau' \sim U([0,1])$, and current policy $\pi_{\theta^\pi}$, the sampled
 TD error is:
@@ -165,7 +165,7 @@ The Huber loss is given by \citet{Huber1964}:
 	     \right.
 \end{equation}
 
-Then the quantile Huber loss is the assymetric variant of the Huber loss:
+Then the quantile Huber loss is the asymmetric variant of the Huber loss:
 
 \begin{align}
     \rho_\tau^\kappa(u)=\Big|\tau - [u<0]\Big|\mathcal{L}_\kappa(u) , \forall u \in \mathbb{R}
@@ -231,8 +231,8 @@ $\tau \sim U[0,\alpha]$:
 \qquad \tau_i \sim U[0,\alpha] \quad \forall i \in [1,K]
 \end{equation}
 
-Therefore, we use arrive to the formula for the \textit{deterministic risk-sensitive policy-gradient},
-the following \textit{distorted policy gradient} for the actor network: \todo{call it like that?}
+Therefore, we arrive to the formula for the \textit{deterministic risk-sensitive policy gradient},
+for the parameters $\theta^\pi$ of the actor: \todo{call it like that?}
 
 \begin{align}
     J_\beta^{CVAR}(\pi | \theta^\pi) &= \int_\mathcal{X} \rho^\beta(s)\text{CVaR}_\alpha(Z^\pi(x,\pi (x| \theta^\pi))dx \nonumber\\
@@ -244,14 +244,14 @@ the following \textit{distorted policy gradient} for the actor network: \todo{ca
 where $\tau_i \in U([0,\alpha]) \; \forall i \in [1,K]$\\
 
 
-The algorithm can be then summed up via:
+The algorithm can be summed up with:
 
 \begin{enumerate}
-    \item Update distributional critic network via off-policy quantile-regression TD-learning:
+    \item Update distributional critic IQN via off-policy quantile-regression TD-learning:
     \begin{align}
         \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1}|\theta^\pi);\tau'| \theta^Z)-Z(x_t,a_t;\tau|\theta^Z) \nonumber
     \end{align}
-    \item Update actor network via deterministic risk-sensitive policy gradient ascent:
+    \item Update actor via deterministic risk-sensitive policy gradient ascent:
     \begin{align}
         \nabla_{\theta^\pi} J_\beta(\pi | \theta^\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
     \big [\nabla_{\theta^\pi} \pi(x,| \theta^\pi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
@@ -259,9 +259,9 @@ The algorithm can be then summed up via:
     \end{align}
 \end{enumerate}
 
-Having its main two steps above, we again remark the capability of the algorithm to be
+Having the two main steps above, we again remark the capability of the algorithm to be
 implemented off-policy. We act in the environment using 
-aa more-exploratory behavior policy $\beta$ and we learn a
+a more-exploratory behavior policy $\beta$ and we learn a
 target policy $\pi$ (where $\beta \neq \pi$).
 In contrast to stochastic off-policy actor-critic algorithms \citep{Degris2012}, we can avoid
 importance sampling both in the actor and the critic.

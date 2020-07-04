@@ -116,7 +116,7 @@ is incapable of distinguishing situations beyond it.
 the following optimization problem:
 
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\} 
+    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\} \label{eq:rockafellar}
 \end{equation}
 
 where $(x)^- = \min(x,0)$.\\
@@ -158,5 +158,15 @@ The CVaR dual formulation and the Acerbi's integral formula \ref{eq:cvar_defs} p
 will be useful to derive our approach to compute the CVaR 
 from parameterized inverse cumulative distributions.
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/cvar_motivation2.pdf}
+    \caption{Histogram showing VaR,mean and CVaR of a sampled probability distribution.
+    The image shows that the mean doesn't take into account low probability events and 
+    the flow of
+    the VaR as a risk metric, since we could move the left-most mode to minus infinity
+    and the VaR will remain the same, whereas the CVaR would change with the shift. }
+    \label{cvar_cheetah}
 
+\end{figure}
 

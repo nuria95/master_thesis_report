@@ -94,10 +94,9 @@ i.e they only update after observing one or more full trajectories.\\
 \citet{Chow2014} also proposed both a trajectory-based and incremental actor-critic
 approaches which help in reducing the variance of PG algorithms. However, they require
 state augmentation of the original MDP formulation to a state-space
-$\mathcal{X} \times \mathcal{Y}$ where $\mathcal{Y} = (0,1]$ is an additional continuous
-state that represents the different confidence levels. 
-This allows to include as a critic the CVaR value function and it is necessary due to 
-the time-inconsistency of CVaR metric.
+$\mathcal{X} \times \mathcal{S}$ where $\mathcal{S} \in \mathbb R$ is an additional continuous
+state that allows to reformulate the Lagrangian objective function as an MDP.
+
 It is also important to be noticed that all the aforementioned algorithms are on-policy approaches.
 This is first another source of sample inefficiency
 because they cannot exploit data from experts or other sources. Additionally they

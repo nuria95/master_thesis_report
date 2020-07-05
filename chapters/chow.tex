@@ -1,0 +1,117 @@
+\section{Chow}
+\textit{The way they formulated the problem considers costs and not rewards. Hence they want to minimize
+(and not maximize) the cost and reduce the right-tail (1-$\alpha$) of the cost distribution }\\
+\citet{Chow2014} present several policy gradient algorithms to solve the optimization problem:
+\begin{equation}
+    \underset{\theta}\min V^\theta(x^0) \quad \text{subject to} \quad \text{CVaR}_\alpha(D^\theta(x^0)) \leq \beta
+\end{equation}
+for a given confidence level $\alpha \in(0,1)$ and loss tolerance $\beta \in \mathbb R$:
+where 
+\begin{align}
+    V^\theta(x^0) = \mathbb E [D^\theta(x)]\\
+    D^\theta(x)=\sum_{k=0}^\infty \gamma^k C(x_k,a_k) | x_0=x, a\sim \mu_\theta\\
+    \text{CVaR}_\alpha(Z)=\underset{\nu\in\mathbb{R} }\min H_\alpha(Z,\nu)\equiv \underset{\nu\in\mathbb{R}}\min\{ \nu + \frac{1}{1-\alpha}\mathbb E[(Z-\nu)^+]\} \label{eq:chow1}
+\end{align}
+By Theorem 16 in \citet{Rockafellar2002} and using the Lagrangian relaxation procedure 
+\citep{Bertsekas_nonlinear} \ref{eq:chow1} can be converted to the following unconstrained problem:
+\begin{equation}
+    \underset{\lambda\geq0}\max \; \underset{\theta,\nu}\min \mathcal{L}(\theta,\lambda,\nu) \;\equiv
+     V^\theta(x^0) + \lambda (H_\alpha (D^\theta(x^0),\nu)-\beta)
+\end{equation}
+where $\lambda$ is the Lagrangian multiplier.\\
+The goal of the authors is to find the saddle point of $ \mathcal{L}(\theta,\lambda,\nu)$, i.e. $(\theta^*,\lambda^*,\nu^*)$ which is achieved by
+descending in $(\theta, \nu)$ and ascending in $\alpha$ using the gradients of  $\mathcal{L}(\theta,\lambda,\nu)$ with respect to 
+the corresponding parameters.\\
+For the sake of comparison with our algorithm, we will focus on the two actor-critic algorithms
+they propose, and ignore the policy gradient algorithm they propose which has high variance.\\
+To address the problem, they approximate some quantities in the gradient estimates by 
+linear combinations of basis functions adn update the parameters (linear coefficients)
+incrementally (after each state-action transition).
+
+Their approach is to change the original MDP $\mathcal{M}$=$\mathcal{(X,A},C,P,P_0)$
+to the augmented MDP $\mathcal{\hat{M}}$=$\mathcal{(\hat{X},\hat{A}},\hat{C},\hat{P},\hat{P}_0)$ 
+where $\mathcal{\hat{X}=X} \times \mathbb R$, $\mathcal{\hat{A}=A}$, $\hat{P}_0(x,s)=P_0(x)\mathds{1}\{s_0=s\}$ and
+
+\begin{equation}
+    \mathcal{\hat{C}}(x,s,a)  = \left\{
+	    \begin{array}{ll}
+		 \frac{\lambda(-s)^+}{1-\alpha}      & \mathrm{if\ } x=x_T \\
+		 C(x,a)                                & \mathrm{otherwise }
+	    \end{array}
+	     \right.
+\end{equation}
+
+\begin{equation}
+    \hat{P}(x',s'|x,s,a)  = \left\{
+	    \begin{array}{ll}
+		 P(x'|x,a)      & \mathrm{if\ } s'=\frac{s-C(x,a)}{\gamma} \\
+		 0                           & \mathrm{otherwise }
+	    \end{array}
+	     \right.
+\end{equation}
+
+where $\mathcal{S}$ is the finite space of the augmented state $s, s_0$ is the initial state of the augmented
+MDP, $x_T$ is the target state of the original MDP $\mathcal{M}$ and $s_T$ is the s part of the state when a policy $\mu$
+reaches a target state $x_T$, i.e. $s_T=\frac{1}{\gamma^T}(\nu - \sum_{k=0}^{T-1}\gamma^kC(x_k,a_k))$, such as 
+$s_0=\nu$.\\
+The augmented state $s$ keeps track of the cumulative CVaR constraint cost and allows to
+reformulate the CVaR Lagrangian problem as an MDP.
+In the augmented MDP, the value function of policy $\mu_\theta$ in state $(x^0,\nu)$
+describes the whole CVaR Lagrangian cost:
+\begin{equation}
+    V^\theta(x^0,\nu) = \mathbb E [D^\theta(x^0)] + \frac{\lambda}{1-\alpha}\mathbb E[(D^\theta(x-\nu)^+]
+\end{equation}
+and it holds that:
+\begin{equation}
+    \nabla_\theta  V^\theta(x^0,\nu)  = \nabla_\theta \mathcal{L}(\theta,\lambda,\nu)
+\end{equation}
+$V^\theta(x^0,\nu)$ is called the critic and represented using linear approximation: $V^\theta(x^0,s) \approx  v^T\phi(x,s)$.
+
+At every time-step $k$ an action is sampled from a parameterized policy $a_k \sim \mu(\cdot |x_k,s_k; \theta_k)$, we observe
+cost $\hat{C}(x_k,s_k,a_k)$ and next state $(x_{k+1},s_{k+1})= \hat{P}(\cdot|x_k,s_k,a_k)$ where $s_{k+1}=\frac{s_k-C(x_k,a_k)}{\gamma}$.
+The critic parameters $v$ are then updated via TD-learning:
+\begin{align}
+    v_{k+1}=v_k + \varsigma_1 \delta_k \phi(x_k, s_k) \\
+    \text{where} \; \delta_k = \hat{C}(x_k,s_k,a_k) +
+    \gamma v_k^T \phi(x_{k+1}, s_{k+1})-v_k^T\phi(x_{k}, s_{k})
+\end{align}
+Rest of parameters $\theta,\lambda,\nu$ are updated by computing their gradients (or gradient estimates) with respect 
+to $\mathcal{L}(\theta,\lambda,\nu)$.
+\begin{equation}
+    \nabla_\theta\mathcal{L}(\theta_k,\lambda_k,\nu_k) \equiv \frac{1}{1-\gamma}\nabla_\theta\log\mu(a_k|x_k,s_k|\theta)\delta_k
+\end{equation}
+With the remaining gradients we can already see some negative points:\\
+They use the unbiased estimate of $\nabla_\lambda  \mathcal{L}(\theta,\lambda,\nu) = 
+\nu_k - \beta + \frac{1}{(1-\gamma)(1-\alpha)}\mathds{1}(x_k=x_T)(-s_T)^+$
+which is fixed to $\nu_k - \beta$ all along a system trajectory and only changes at the end, which affects
+the incremental nature of the actor-critic algorithm.
+Additionally, it will only change $\lambda$ in the case that $-s_T>0$
+
+$\partial_\nu  \mathcal{L}(\theta,\lambda,\nu) $ estimate can only be
+applied at the end of a system trajectory, 
+when the terminal state $x_T$ is reached, which prevents from having a fully-incremental algorithm.
+\begin{equation}
+    \partial_\nu  \mathcal{L}(\theta_k,\lambda_k,\nu_k) \ni \lambda_k - \lambda_k \frac{\mathds{1}\{s_T\leq 0\}}{1-\alpha}
+\end{equation}
+This is the estimator they use in the \textit{semi trajectory-based } actor-critic algorithm and it only updates the value 
+in case $s_T\leq0$.
+As an alternative, to estimate the sub-gradient $g(v) \in \partial_\nu  \mathcal{L}(\theta,\lambda,\nu) $ 
+incrementally they propose a \textit{simultaneous perturbation stochastic approximation}(SPSA)
+approximation, which aims to estimate the sub-gradient $g(\nu)$ using two values of 
+g at $\nu^-=\nu- \Delta$ and $\nu^+=\nu + \Delta$ where $\Delta$ is a positive perturbation.
+In this case, and using the fact that the critic uses a linear approximation for the value function $V^\theta(x^0,s) \approx  v^T\phi(x,s)$:
+\begin{equation}
+    \partial_\nu  \mathcal{L}(\theta_k,\lambda_k,\nu_k) \overset{\mathrm{SPSA}}{\approx} \lambda_k + v^T[\phi(x^0,\nu^+)-\phi(x^0,\nu^-)]/2\Delta \label{eq:spsa}
+\end{equation}
+When using more complex function approximators for the critic, computing \ref{eq:spsa} won't be that trivial, hence 
+algorithm is also limited to simple MDPs that don't require complex $V^\theta$.
+
+Despite the final computational simplicity of the algorithm, we showed that it
+relies on lots of approximations and implementing it incrementally it is not straight-forward.
+
+It also uses an stochastic policy which as we already discussed  is not natural in many appplications and it can increase
+the variance of the return. Furthermore, when working in an stochastic environment and trying to reduce the risk,
+using a policy which brings in additional stochasticity sounds a bit counterintuitive.
+Finally, is an on-policy algorithm which needs to act in the environment using same policy as the one being learnt.
+Hence, despite some modifications (for example introducing importance sampling), the algorithm cannot never be used 
+in off-line settings.

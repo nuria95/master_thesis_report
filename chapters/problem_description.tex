@@ -123,14 +123,12 @@ where $(x)^- = \min(x,0)$.\\
 In the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.
 
 A useful property of CVaR, is its alternative dual representation \cite{Artzner1999}:
-
 \begin{equation}
-    \text{CVaR}_\alpha (Z) = \underset{\xi \in U_{\text{CVaR}} (\alpha, \mathbb{P})} \min \mathbb E_\xi[Z]
+    \text{CVaR}_\alpha (Z) = \underset{\xi \in U_{\text{CVaR}} (\alpha, \mathbb{P})} \min \mathbb E_\xi[Z] \label{eq:dual_cvar}
 \end{equation}
 
 where $\mathbb E_\xi[Z]$ denotes the $\xi$-weighted expectation of $Z$, and the risk envelope $U_\text{CVaR}$ is
 given by:
-
 \begin{equation}
     U_{\text{CVaR}}(\alpha, \mathbb{P}) = \Big\{\xi | \xi(w)  \in \big [ 0, \frac{1}{\alpha} \big ], \int_{w\in\Omega} \xi(w)\mathbb{P}(w)dw=1   \big ] \Big\}
 \end{equation}

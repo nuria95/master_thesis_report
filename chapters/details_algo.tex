@@ -1,9 +1,9 @@
-\section{Technical Details of the algorithm}
+\section{Technical Details of the algorithm} \label{sec:technical_details}
 The algorithm uses neural networks as non-linear function approximators for both the actor and the critic.
 To make effective use of large neural networks, we use insights fom the DeepDPG algorithm \cite{Lillicrap2016} and in its turn
 from Deep Q Network (DQN) \citep{Mnih2015}.
 Before DQN, RL was believed to be unstable or diverge when nonlinear function approximators such as neural networks were used.
-The instability has several causes.First, correlation in the sequence of observations occurring when
+The instability has several causes. First, correlation in the sequence of observations occurring when
 samples ar generated from exploring sequentially in an environment (hence i.i.d assumption is violated).
 Second, non-stationary data distribution since small updates in Q network may significantly change the policy and hereby, the data distribution.
 And third, correlation between the action-values and the target values during temporal difference backups since same network is being used.

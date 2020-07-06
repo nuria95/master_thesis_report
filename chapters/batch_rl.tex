@@ -1,37 +1,62 @@
-\chapter{Batch RL}
-\begin{itemize}
-    \item Watch videos Levine
-    \item Papers bear and bcq
-    
-\end{itemize}
+\chapter{Batch RL}\label{chapter:batchrl}
 
 We decide to test the capabilities of our algorithm in a \textit{fully} off-policy setting, 
-also called \textit{batch RL setting} or \textit{offline} RL. In this setting, the agent 
+also called \textit{batch RL setting} or \textit{offline RL}. In this setting, the agent 
 can only learn from a fixed dataset without further interaction with the environment.
 
-\todo{ Add motivation in doing so: envs where collection of data is expensive, unsafe for robotics or autonomous vehicles}
+Most of RL algorithms provide a fundamentally \textit{online} learning paradigm which involves
+iteratively collecting experience by interacting with the environment, typically with the latest learned policy, and then
+using that experience to improve the policy. 
+In many  real-world scenarios, continuous interacting with the environment is impractical, either because 
+data collection is expensive, as in robotics or healthcare or dangerous, for example a physical robot may
+get its hardware damaged or damaged surrounding objects.
 
-The 'off-policy' algorithm we presented in previous sections falls in the category of 
-off-policy \textit{"growing batch learning"} in which data is collected by using near-on-policy
-policies such as $\epsilon$-greedy and stored in a replay buffer.
-After used for training, the data is replaced with \textit{fresher} data obtained from
-interaction of the agent with the environment using an updated policy.
-As a result, the dataset used tends to be heavily correlated to the current policy.
+
+The "off-policy" algorithm we presented in previous sections, and similarly to most of the "off-policy"
+algorithms in literature, falls in the category of 
+off-policy \textit{"growing batch learning"} in which agent's experience is appended to a data buffer 
+$\mathcal{D}$ and each new policy $\pi_k$ collects additional data, such that $\mathcal{D}$
+is composed of samples from $\pi_0,\pi_1...,\pi_k$ and all of this data is used to train an updated new
+policy $\pi_{k+1}$. As a result, the training data tends to be heavily correlated to the current policy.
+Hence, despite being off-policy these methods require active online data collection.
+
+In contrast, offline RL employs a dataset $\mathcal{D}$ collected by an external agent following policy $\pi_\beta$
+and it is not altered during training.
+In numerous real-world applications, such as games or robotics, there is already plentiful amounts 
+of previously collected interaction data which are a rich source of prior information.
+RL algorithms that can train agents using these prior datasets without further data collection,
+will not only scale to real-world problems, but will also lead to solutions that generalize substantially better.
+Off-line RL holds tremendous promise for making it possible to turn large datasets into powerful 
+decision-making engines, effectively allowing anyone with a large enough dataset to turn this dataset
+into a policy than can optimize a desired utility criterion. \citep{levine2020}.
+
+
 
 
 \textbf{Issues with Batch RL}
 
-Most of off-policy algorithms fail to learn in the off-line setting. 
+Most of recent off-policy algorithms such as Soft Actor-Critic \citep{Haarnoja2018}, 
+DDPG \citep{Lillicrap2016} and Rainbow \citep{Hessel2018}  still require substantial amounts
+of “on-policy” data from the current behavioral policy in order to learn effectively, 
+and generally they fail to learn in the off-line setting. Function approximation generally exacerbates this issue.
+
+
 This is due to a fundamental problem of off-policy RL, called extrapolation error \citep{Fujimoto2019} or 
 bootstrapping error \citep{Kumar2019}. This error is introduced due to a mismatch
 between the dataset distribution and the state-action visitation distribution induced by the
-current target policy.
-At every train step the Q estimate is updated in the direction to reduce
-the Bellman error, ie the mean squared error between the current value estimate and
-the expected Q value under the current target policy at the next state.
-The Q function estimator, however, is valid only when evaluated on actions sampled from the behavior policy,
-which in the batch-RL case is the distribution of the dataset.
-Using unfamiliar (unlikely or not contained in the dataset) action
+target policy.\\
+In most off-policy RL methods, the Q-function estimate is updated at every timestep 
+in the direction to reduce the mean-squared Bellman error, i.e. the 
+mean squared error between the current Q estimate and
+the expected Q at the next state or \textit{target}.
+For deterministic actor-critic methods, targets are computed as the Q value under the current
+target policy at the next-state.
+Importantly, the targets are computed via bootstrapping, hence derived from the same current
+Q-function estimate.
+
+The Q function estimator, however, is valid only when evaluated on actions sampled
+from the behavior policy, which in the batch-RL case is the distribution of the dataset.
+Using an unfamiliar (unlikely or not contained in the dataset) action
 (also called out of distribution (OOD) actions in \citep{Kumar2019}) for the next-state,
 results on a new Q value estimate which is affected by this extrapolation error,
 resulting in pathological values that incur large absolute error from the optimal desired Q-value.
@@ -81,12 +106,12 @@ distribution $\mathcal{N}\big( 0,Id\big )$, hence it lacks parameters.
 For the probabilistic encoders and decoders we use neural networks.
 For the encoder $q(z|x_i;\phi)$ we used a neural network with  Gaussian output, specifically a 
 multivariate Gaussian with a diagonal covariance structure $\mathcal{N}(z | \mu(X), \sigma^2(X)Id)$,
-where $\mu$ and $\sigma$ are the outputs of the neural network, i.e nonlinear 
+where $\mu$ and $\sigma$ are the outputs of the neural network, i.e. nonlinear 
 functions of datapoint $x_i:=(state_i,action_i)$ and $\phi$.
 To sample from the posterior $z_i \sim q(z|x_i; \phi)$ we use the reparameterization trick:
 $z_i = g(x_i, \epsilon; \phi)=\mu_i + \sigma_i \odot \epsilon$ where $\epsilon \sim  \mathcal{N}(0,Id)$
 and $\odot$ is the element-wise product.
-For the decoder $p(x|z; \theta)$ we used another neural network with deterministic output, ie nonlinear function of 
+For the decoder $p(x|z; \theta)$ we used another neural network with deterministic output, i.e. nonlinear function of 
 datapoint $\hat x_i:=(state_i,z_i)$ and $\theta$.
 
 
@@ -110,10 +135,12 @@ action.
 Finally, when acting during evaluation or deployment, random values of z will be sampled from the multivariate normal
 and passed through the decoder to produce actions.
 
+\todo{add:}
 
+\begin{itemize}
+    \item New actor network
+    \item VAE(state) + perturbation\_level $\times$ DeterministicActorNN(vae\_action, state)
+    \item Train DeterministicActorNN as in the algorithm presented previously for off-policy RL.
+    \item Remove randn sampling of z in deployment? It works :)
+\end{itemize}
 
-Change the Deterministic actor network to:
-
-VAE(state) + perturbation\_level $\times$ DeterministicActorNN(vae\_action, state)
-
-Train DeterministicActorNN as in the algorithm presented previously for off-policy RL.

@@ -1,13 +1,13 @@
 
 \chapter{Distributional RL}
-\label{sec:distr_rl}
+\label{chapter:distr_rl}
 
 
 \section{Distributional RL}
 
 Recent research has been done demonstrating the importance of learning the value
 distribution,
-i.e, the distribution of the random return received by a RL agent.
+i.e., the distribution of the random return received by a RL agent.
 This differs from the common RL approach which is focused on learning the expected value
  of this return.
 
@@ -29,9 +29,9 @@ return Z.
 \subsection{Example showing interest in learning the distribution}
 
 Imagine the example in which we are playing a board game and we roll 2 dices.
-If we get a 3, we fall in prison and need to pay 2000CHF (ie reward of -2000CHF), whereas
+If we get a 3, we fall in prison and need to pay 2000CHF (i.e. reward of -2000CHF), whereas
  otherwise we 
-we collect a salary of 200CHF (ie reward of +200CHF).
+we collect a salary of 200CHF (i.e. reward of +200CHF).
 If we consider the common reinforcement learning approach and we compute the expected
 immediate ($\gamma = 1$)
 reward: 
@@ -123,7 +123,7 @@ where for a random variable Y, the inverse CDF $F_Y^{-1}$ of Y is defined by:
     F_Y^{-1}(w) \coloneqq \text{inf} \big\{ y \in \mathbb{R} \; | w \; \leq   F_Y(w)    \big\}
 \end{equation}
 where $F_Y(w) = Pr(y \leq Y)$. \\
-\todo{Add Figure 2.1 in \cite{Dabney2018}}
+\todo{Add Figure 2.1 in \cite{Dabney2018a}}
 Unlike the Kullback-Leibler divergence , the Wasserstein metric is a true probability
 metric and considers both the probability of
 and the distance between various outcome events, which makes it well-suited to domains 
@@ -167,11 +167,11 @@ the Wasserstein distance between a distribution Z and its distributional Bellman
 $T^\pi Z$, analogously to the way that TD-learning attempts to iteratively minimize
 the $L^2$ distance between Q and $TQ$.
 
-We have so fare considered a policy evaluation setting, ie trying to learn a value
+We have so fare considered a policy evaluation setting, i.e. trying to learn a value
 distribution for a fixed policy $\pi $, and we studied
 the behavior of its associated distributional operator $T^\pi $.
-In the control setting, ie, when we try to find a policy $\pi^{*} $ that maximizes a
-value, or its distributional analogous, ie that
+In the control setting, i.e., when we try to find a policy $\pi^{*} $ that maximizes a
+value, or its distributional analogous, i.e. that
 induces an optimal value distribution. However, while all optimal policies attain the
 same value $Q^{*}$, in general there are
 many optimal value distributions.
@@ -194,7 +194,7 @@ A greedy policy $\pi$ for Z $in \mathcal{Z}$ maximizes the expectation of Z. The
 \end{equation*}
 
 We will call a \textit{distributional Bellman optimality operator} any operator $\mathcal{T}$ which implements a greedy selection
-rule, ie:
+rule, i.e.:
 \begin{equation*}
     \mathcal{T}Z = \big\{ \mathcal{T}^\pi Z \; \text{for some}\; \pi \in   \mathcal{G_Z} \big\}
 \end{equation*}
@@ -219,7 +219,7 @@ viewed as a loss, using stochastic gradient descent methods. This limitation, is
 in a practical context, when the value distribution needs to be approximated.
 
 \subsection{Quantile approximation}
-\cite{Dabney2018} used the theory of quantile regression \cite{koenker2001}, to
+\cite{Dabney2018a} used the theory of quantile regression \cite{koenker2005}, to
 design an algorithm applicable in a stochastic approximation setting.
 Quantile regression is used to estimate the quantile function at precisely chosen points.
 Then the Bellman update is applied onto this parameterized quantile distribution.
@@ -227,7 +227,7 @@ This combined operator is proven to be a contraction and the estimated quantile 
 is shown to converge to the true value distribution when minimized using stochastic approximation.
 
 \subsection{Quantile projection:}
-Our current aim is to estimate quantiles of the target distribution, ie the values 
+Our current aim is to estimate quantiles of the target distribution, i.e. the values 
 of the return that divide the value distribution in equally sized parts.
 We will call it a quantile distribution,
 and we will let $\mathcal{Z_Q}$ be the space of quantile distributions.
@@ -241,7 +241,7 @@ uniform mixture of N Diracs:
     Z_\theta(x,a) \coloneqq \frac{1}{N}\sum_{i=1}^{N}\delta_{\theta_i(x,a)}  \label{eq:discrete_pdf}
 \end{equation}
 with each $\theta_i$ assigned a fixed quantile.
-We aim to learn the support of these Diracs, i.e learn $\theta_i \forall i, a, x$.
+We aim to learn the support of these Diracs, i.e. learn $\theta_i \forall i, a, x$.
 We will do it by quantifying the projection of an arbitrary value distribution $Z \in \mathcal{Z}$
 onto $\mathcal{Z_Q}$, that is:
 
@@ -257,11 +257,11 @@ over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta
     W_1(Y,U)= \sum_{i=1}^{N}\int_{\tau_{i-1}}^{\tau_i} |   F_Y^{-1}(w)-\theta_i   |dw
 \end{equation}
 
-Lemma 2 in \cite{Dabney2018} establishes that the values $\{\theta_1, ... ,\theta_N\}$ for the returns  that minimize 
+Lemma 2 in \cite{Dabney2018a} establishes that the values $\{\theta_1, ... ,\theta_N\}$ for the returns  that minimize 
 $W_1(Y,U)$ are given by $\theta_i = F_Y^{-1}(\hat\tau_i)$, where $\hat\tau_i=\frac{\tau_{i-1}+\tau_i}{2}$.
 
 \subsection{Quantile Regression}
-Quantile regression is a method for approximating quantile functions of a distribution at specific points, ie its inverse
+Quantile regression is a method for approximating quantile functions of a distribution at specific points, i.e. its inverse
 cumulative distribution function.
 The quantile regression loss, for quantile $\tau \in [0,1]$, is an asymmetric convex lox function
 that penalizes underestimation errors with weight $\tau$ and overestimation errors
@@ -272,7 +272,7 @@ may be characterized as the minimizer of the quantile regression loss:
     \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ] \label{eq:quantile_loss}\\
     \rho_\tau(u)=u(\tau - \delta_{u<0}) , \forall u \in \mathbb{R} \nonumber
 \end{align}
-Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and using Lemma 2 in \cite{Dabney2018},
+Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and using Lemma 2 in \cite{Dabney2018a},
 which claims that the values of $\{\theta_1, ... \theta_N\}$ that minimize
  $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$; we can claim that
  the values of $\{\theta_1, ... \theta_N\}$ are the minimizers of the following objective:
@@ -294,7 +294,7 @@ by stochastic gradient descent.
     \label{quantile_loss}
 \end{figure}
 
-Proposition 2 in \cite{Dabney2018} states that the combined quantile projection 
+Proposition 2 in \cite{Dabney2018a} states that the combined quantile projection 
 $\prod_{W_1}$ with the Bellman update $\mathcal{T}^\pi$ has a unique fixed point $\hat{Z}^\pi$, and the repeated application
 of this operator, or its stochastic approximation, converges to $\hat{Z}^\pi$.
 

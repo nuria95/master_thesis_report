@@ -5,26 +5,33 @@ also called \textit{batch RL setting} or \textit{offline RL}. In this setting, t
 can only learn from a fixed dataset without further interaction with the environment.
 
 Most of RL algorithms provide a fundamentally \textit{online} learning paradigm which involves
-iteratively collecting experience by interacting with the environment, typically with the latest learned policy, and then
+iteratively collecting experience by interacting with the environment, and then
 using that experience to improve the policy. 
 In many  real-world scenarios, continuous interacting with the environment is impractical, either because 
-data collection is expensive, as in robotics or healthcare or dangerous, for example a physical robot may
-get its hardware damaged or damaged surrounding objects.
+data collection is expensive, as in robotics or healthcare, or dangerous, for example a physical robot may
+get its hardware damaged or damage surrounding objects.
+Additionally, even in some cases were online interaction is feasible, we might prefer to still use previously
+collected datasets - for example, if the domain is complex (such as a robot learning to cook several meals at home)
+and effective generalization (cooking in different kitchens) requires large datasets. \todo{example in \cite{levine2020}}
 
 
-The "off-policy" algorithm we presented in previous sections, and similarly to most of the "off-policy"
+The ``off-policy" algorithm we presented in previous sections, and similarly to most of the ``off-policy"
 algorithms in literature, falls in the category of 
-off-policy \textit{"growing batch learning"} in which agent's experience is appended to a data buffer 
+off-policy \textit{``growing batch learning"}. In this case, agent's experience is appended to a data buffer 
 $\mathcal{D}$ and each new policy $\pi_k$ collects additional data, such that $\mathcal{D}$
-is composed of samples from $\pi_0,\pi_1...,\pi_k$ and all of this data is used to train an updated new
-policy $\pi_{k+1}$. As a result, the training data tends to be heavily correlated to the current policy.
+is composed of samples from $\pi_0,\pi_1...,\pi_k$ and all of this data is used to train an update new
+policy $\pi_{k+1}$. 
+%As a result, the training data tends to be heavily correlated to the current policy.
 Hence, despite being off-policy these methods require active online data collection.
 
-In contrast, offline RL employs a dataset $\mathcal{D}$ collected by an external agent following policy $\pi_\beta$
-and it is not altered during training.
+In contrast, in offline RL the agent no longer has ability to interact with the environment and collect
+additional transitions. Instead, it
+can only employ a static dataset $\mathcal{D}$ collected by an external agent using policy $\pi_beta$
+and must learn the best policy it can only using this dataset.
+
 In numerous real-world applications, such as games or robotics, there is already plentiful amounts 
 of previously collected interaction data which are a rich source of prior information.
-RL algorithms that can train agents using these prior datasets without further data collection,
+RL algorithms that can train agents using these prior datasets without further data collection
 will not only scale to real-world problems, but will also lead to solutions that generalize substantially better.
 Off-line RL holds tremendous promise for making it possible to turn large datasets into powerful 
 decision-making engines, effectively allowing anyone with a large enough dataset to turn this dataset
@@ -36,7 +43,8 @@ into a policy than can optimize a desired utility criterion. \citep{levine2020}.
 \textbf{Issues with Batch RL}
 
 Most of recent off-policy algorithms such as Soft Actor-Critic \citep{Haarnoja2018}, 
-DDPG \citep{Lillicrap2016} and Rainbow \citep{Hessel2018}  still require substantial amounts
+DDPG \citep{Lillicrap2016} and Rainbow \citep{Hessel2018}  could be in principle used 
+as an offline RL algorithm. However, in practice, they still require substantial amounts
 of “on-policy” data from the current behavioral policy in order to learn effectively, 
 and generally they fail to learn in the off-line setting. Function approximation generally exacerbates this issue.
 

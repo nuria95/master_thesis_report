@@ -2,29 +2,37 @@
 \label{sec:introduction}
 
 
-Decision-making is the process of taking choices by identifying an optimal strategy
-from current system states. A crucial element in the process is the performance measure used
-to assess how good the choice is for the decision-maker or agent.
-In sequential decision-making problems, the most common optimization criterion is the 
-expectation of the cumulative reward collected by the agent, which leads to a \textit{risk-neutral}
-behavior.
+% Decision-making under uncertainty is the process of taking choices by identifying an optimal strategy
+from current system states.
 
-However, this approach neither takes in to account the variability of the rewards (i.e fluctuations around the mean)
-nor its sensitivity to modeling errors. In some scenarios affected by measurement or modelling errors and
-in which the safety of the agent is particularly important, such as autonomous navigation or
-or finances, it is crucial to ensure that
-only \textit{safe} action strategies will take place.\\
-In many works, the concept of safety, or its opposite risk, is related to the inherent
-stochasticity of the environment.
-Under those environments, even an optimal policy with respect to the expected 
-cumulative reward, may perform very poorly in some cases. Since maximizing the expected
-cumulative-reward does not necessarily imply the avoidance of rare occurrences of large negative outcomes,
-we need other criteria to evaluate risk. \citep{Garcia2015}.
+In sequential decision-making problems, an agent interacts with an environment by selecting actions and in turn, it observes the state transitions of the system and it receives a reward.
+The decision-maker uses a performance measure to assess how good actions were.
+The most common optimization criterion is the expectation of the cumulative reward collected by the agent with respect to the randomness in the system. This leads to the so called \textit{risk-neutral} behavior.
 
-Risk-sensitive decision-making provides a promising
-approach to compute robust and safe policies, but
-finding computationally tractable and conceptually meaningful methodologies for such a goal is non-trivial
-and still a challenge.
+However, \textit{risk-neutral} behaviour %this approach 
+does not take into account the variability of the rewards obtained during an interaction. %nor its sensitivity to modeling errors. 
+In some scenarios, particularly in those in which the safety of the agent is important, it is crucial not to optimize the {\em expected} performance, but rather the {\em worst-case} performance. 
+For example, in autonomous navigation we want to guarantee that the vehicle goes from point A to point B without ever crashing, not only in expectation. 
+Likewise, in finance ... 
+Since maximizing the expected cumulative-reward does not necessarily imply the avoidance of rare occurrences of large negative outcomes, we need other criteria to evaluate risk. \citep{Garcia2015}.
+
+% In some scenarios affected by measurement or modelling errors and in which the safety of the agent is particularly important, such as autonomous navigation or finances, it is crucial to ensure that only \textit{safe} action strategies will take place.
+% In many works, the concept of safety, or its opposite risk, is related to the inherent stochasticity of the environment.
+% Under those environments, even an optimal policy with respect to the expected  cumulative reward, may perform very poorly in some cases. 
+%Since maximizing the expected cumulative-reward does not necessarily imply the avoidance of rare occurrences of large negative outcomes, we need other criteria to evaluate risk. \citep{Garcia2015}.
+
+Risk-sensitive decision-making optimizes a performance criterion that considers such {\em worst-case} performance. 
+In this work, we focus on the Conditional Value-at-Risk (CVaR) ... 
+Although it has been well studied, finding computationally tractable and conceptually meaningful methodologies for such a criterion in complex environments is still a challenge.
+
+% provides a promising approach to compute robust and safe policies, but finding computationally tractable and conceptually meaningful methodologies for such a goal is non-trivial and still a challenge.
+
+
+\textbf{Paragraph on RL}
+
+\textbf{Paragraph of what was done for the CVaR on RL}
+
+\textbf{Paragraph on what you do in this thesis. In paragraph below motivate the need of an OFF-POLICY Deterministic algorithm for CVaR optimization. Say how this is compeling in the batch setting.}
 
 In this thesis, we focus on the reinforcement learning (RL) framework, a branch of machine learning
 that focuses on dynamic decision making in unknown environments, and propose a risk-sensitive approach
@@ -34,3 +42,4 @@ to act \textit{safely} in a non-deterministic environment.
 
 
 
+\textbf{Add related work section}

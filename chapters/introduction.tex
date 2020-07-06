@@ -24,6 +24,8 @@ such as autonomous navigation.
 However, finding computationally tractable and conceptually meaningful methodologies for
 such a goal is non-trivial and still a challenge.
 
+
+
 We can segment RL algorithms accounting for risk in two main categories: the first transform 
 the optimization criterion to introduce the concept of risk, whereas the second, modifies
 the exploration process to avoid exploratory actions that can lead to undesirable situations.\\
@@ -63,6 +65,7 @@ $\text{CVaR}_\alpha (Z)$, where the return distribution $Z$ is parameterized by 
 controllable parameter $\theta$ such that: $Z = f(X; \theta)$.\\
 In the simplest scenarios, where $X$ is not dependant on $\theta$ CVaR optimization may 
 be solved using various approaches such as in \citet{Rockafellar2000}.\\
+
 However, in RL, the tunable parameter $\theta$ also affects the 
 distribution of $X$ and therefore, the standard existing approaches for CVaR optimization 
 are not suitable.\\

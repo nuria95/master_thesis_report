@@ -12,7 +12,8 @@ data collection is expensive, as in robotics or healthcare, or dangerous, for ex
 get its hardware damaged or damage surrounding objects.
 Additionally, even in some cases were online interaction is feasible, we might prefer to still use previously
 collected datasets - for example, if the domain is complex (such as a robot learning to cook several meals at home)
-and effective generalization (cooking in different kitchens) requires large datasets. \todo{example in \cite{levine2020}}
+and effective generalization (e.g cooking in different kitchens or using different ingredients for the meal)
+requires large datasets \cite{levine2020}.
 
 
 The ``off-policy" algorithm we presented in previous sections, and similarly to most of the ``off-policy"
@@ -26,7 +27,7 @@ Hence, despite being off-policy these methods require active online data collect
 
 In contrast, in offline RL the agent no longer has ability to interact with the environment and collect
 additional transitions. Instead, it
-can only employ a static dataset $\mathcal{D}$ collected by an external agent using policy $\pi_beta$
+can only employ a static dataset $\mathcal{D}$ collected by an external agent using policy $\pi_\beta$
 and must learn the best policy it can only using this dataset.
 
 In numerous real-world applications, such as games or robotics, there is already plentiful amounts 
@@ -38,55 +39,69 @@ decision-making engines, effectively allowing anyone with a large enough dataset
 into a policy than can optimize a desired utility criterion. \citep{levine2020}.
 
 
-
-
-\textbf{Issues with Batch RL}
+\section{Issues with Batch RL} \todo{change title?}
 
 Most of recent off-policy algorithms such as Soft Actor-Critic \citep{Haarnoja2018}, 
 DDPG \citep{Lillicrap2016} and Rainbow \citep{Hessel2018}  could be in principle used 
-as an offline RL algorithm. However, in practice, they still require substantial amounts
+as an offline RL algorithm, i.e. learn from data collected from an unknown behavioral policy
+$\pi_\beta$ with state visitation frequency $d^{\pi_\beta}(s)$. 
+However, in practice, they still require substantial amounts
 of “on-policy” data from the current behavioral policy in order to learn effectively, 
-and generally they fail to learn in the off-line setting. Function approximation generally exacerbates this issue.
+and generally they fail to learn in the off-line setting.
 
+This is due to a fundamental problem of off-policy RL, called \textit{distributional shift}, which in 
+its turn induces what's called extrapolation error \citep{Fujimoto2019} or bootstrapping error \citet{Kumar2019}.\\
+Distributional shift affects offline RL via dynamic programming algorithms (as ours, i.e. methods aiming
+to learn a state or state-action value function), both at test time and training time.
+State distribution shift affects test-time performance, but no training, since neither the policy nor
+the Q-function is ever evaluated at any state that was not sampled from $d^{\pi_\beta}$.\\
+However, training process is indeed affected by \textit{action distribution shift}.
+This is because when doing the Bellman backup to update the Q-function estimate,
+the \textit{target} values require evaluating the estimated $Q^\pi(x_{k+1},a_{k+1})$ where
+a is chosen according to current policy $\pi$.
+Since targets are computed via bootstrapping, accuracy of Q-function regression depends
+on the estimate of the Q-value at these actions. When $\pi$ differs substantially from $\pi_\beta$, 
+these actions are generally unlikely or not contained in the dataset, i.e.
+out of the distribution of actions that Q-function was ever trained on. This can result
+in highly erroneous targets Q-values, and in its turn, in updated new Q estimates 
+with pathological values that incur large absolute error from the optimal desired Q-value.\\
+This issue is further exacerbated when $\pi$ is explicitly optimized to maximize $Q^\pi(s,\pi(a))$.
+Then, the policy will learn to produce out-of-distribution (OOD) actions
+for which the learnt Q-function erroneously overestimates.
+This source of distribution shift is in fact one of the largest obstacles for practical application
+of dynamic programming methods to offline RL.
 
-This is due to a fundamental problem of off-policy RL, called extrapolation error \citep{Fujimoto2019} or 
-bootstrapping error \citep{Kumar2019}. This error is introduced due to a mismatch
-between the dataset distribution and the state-action visitation distribution induced by the
-target policy.\\
-In most off-policy RL methods, the Q-function estimate is updated at every timestep 
-in the direction to reduce the mean-squared Bellman error, i.e. the 
-mean squared error between the current Q estimate and
-the expected Q at the next state or \textit{target}.
-For deterministic actor-critic methods, targets are computed as the Q value under the current
-target policy at the next-state.
-Importantly, the targets are computed via bootstrapping, hence derived from the same current
-Q-function estimate.
-
-The Q function estimator, however, is valid only when evaluated on actions sampled
-from the behavior policy, which in the batch-RL case is the distribution of the dataset.
-Using an unfamiliar (unlikely or not contained in the dataset) action
-(also called out of distribution (OOD) actions in \citep{Kumar2019}) for the next-state,
-results on a new Q value estimate which is affected by this extrapolation error,
-resulting in pathological values that incur large absolute error from the optimal desired Q-value.
-
-It is good to notice, that for an on-policy settings, extrapolation error is generally something positive, since it
+It is important to notice that for on-policy settings, extrapolation error is generally something positive, since it
 leads to a beneficial exploration. In this case, if the value function is overestimating the value at
-a (state-action) pair, the current policy will lead the agent to that pair, collect the data at that point
-and hence, the value estimate will be corrected afterwards.
-In the off-policy setting, the correction step is not possible due to the inability of collecting new data.
+a (state-action) pair, the current policy will lead the agent to that pair and will observe that in fact
+it is not as good and hence, the value estimate will be corrected afterwards.
+However, in the offline setting, the correction step on such over-optimistic Q-values cannot be done by the 
+policy, due to the inability of collecting new data, and these errors accumulate over each iteration of training,
+resulting in arbitrarily poor final results or even divergence.
 
 
+To address this OOD actions problems and effectively implement offline RL via dynamic programming,
+\citet{Fujimoto2018} opted for constraining the trained policy distribution to lie close to
+the dataset policy distribution, to avoid erroneous Q-values due to extrapolation error.
+\citet{Kumar2019} suggested a less restrictive solution to constrain the learnt policy to lie
+\textit{within the support} of the dataset policy distribution.
+\todo{maybe cite more?}
 
-\textbf{Our approach}
-\todo{rewrite}
-To overcome this issue, we inspire ourselves on the approach presented in \citet{Fujimoto2019}, where a
-generative model $G_w$ is trained to generate actions with high similarity to the dataset.
-For the generative model we use a conditional variational auto-encoder (VAE) \cite{Kingma2014} which
+For our algorithm, we will inspire ourselves in the approach presented in 
+\citet{Fujimoto2019}, which we introduce below with its further modifications.
+
+
+\section{Our approach} \todo{more explicit title?}
+In \citet{Fujimoto2019}, they present a Batch-Constrained Deep Q-learning (BCQ)
+algorithm in which they
+train a generative model $G_w$ to generate actions with high similarity to the dataset.
+For the generative model they use a conditional variational auto-encoder (VAE) \cite{Kingma2014} which
 generates action samples as a reasonable approximation to
-$\underset{a}{\text{argmax}}  P _\mathcal{B}^G(a|s)$, where $P _\mathcal{B}^G(a|s)$ is the 
-conditioned marginal likelihood.
+$\underset{a}{\text{argmax}}  P _\mathcal{B}^G(a|s)$, where $P_\mathcal{B}^G(a|s)$ is 
+the state-conditioned marginal likelihood given the (state-action) pairs in the 
+batch $\mathcal{B}$.
 
-\section{Details of VAE}
+\subsection{Details of VAE}
 
 A variational autoencoder aims to maximize the marginal log-likelihood $\log p(X) = \sum_{i=1}^{N}\log p(x_i)$
 , where X is the dataset with iid samples $\{x_{1},x_2,...x_N\}$.

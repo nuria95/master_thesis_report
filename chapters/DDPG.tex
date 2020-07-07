@@ -247,18 +247,19 @@ for the parameters $\theta^\pi$ of the actor: \todo{call it like that?}
 where $\tau_i \in U([0,\alpha]) \; \forall i \in [1,K]$\\
 
 
+\section{Summary}
 The algorithm can be summed up with:
 
 \begin{enumerate}
     \item Update distributional critic IQN via off-policy quantile-regression TD-learning:
     \begin{align}
-        \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1}|\theta^\pi);\tau'| \theta^Z)-Z(x_t,a_t;\tau|\theta^Z) \nonumber
+        \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1}|\theta^\pi);\tau'| \theta^Z)-Z(x_t,a_t;\tau|\theta^Z) \label{eq:alg1}
     \end{align}
     \item Update actor via deterministic risk-sensitive policy gradient ascent:
     \begin{align}
         \nabla_{\theta^\pi} J_\beta(\pi | \theta^\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
     \big [\nabla_{\theta^\pi} \pi(x,| \theta^\pi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
-    \sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\pi(x| \theta^\pi)}  \big] \nonumber
+    \sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\pi(x| \theta^\pi)}  \big] \label{eq:alg2}
     \end{align}
 \end{enumerate}
 

@@ -25,7 +25,7 @@ Exploration was addressed by constructing an exploratory behavior policy $\beta$
 where $\eta$ is sampled from a noise process. In our case, as in \citet{Lillicrap2016},we
 used an Ornstein-Uhlenbeck process \citep{Uhlenbeck1930} with $\theta = 0.15$ and $\sigma=0.3$ with exponential decay.
 Ornstein-Uhlenbeck process models the velocity of a Brownian particle with friction, which results in temporally correlated
-values centered around the mean ($\mu$=0.) \todo{explain more?}
+values centered around the mean ($\mu$=0). \todo{explain more?}
 
 At every training step, a minibatch of observations is sampled from the buffer.
 To estimate the target value for critic training, we use two target networks:  \textit{critic target network} and \textit{actor target network}

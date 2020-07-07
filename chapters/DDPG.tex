@@ -117,7 +117,7 @@ Policy iteration consists of two phases: policy evaluation and policy improvemen
 Policy evaluation phase computes the Q-function for the current policy $\pi$, $Q^\pi$, by solving
 for the fixed point such that $Q^\pi=\mathcal{T}^\pi Q^\pi$, which can be done via gradient updates of 
 the loss \ref{eq:bellman_loss}. Policy improvement is done by choosing the action that greedily maximizes the Q-value at
-each state which can be done by using a gradient based update procedure as in \ref{eq:off_policy_gradient}
+each state which can be done by using a gradient based update procedure as in \ref{eq:off_policy_gradient}.
 
 \section{The algorithm: Distributional off-policy deterministic actor critic} \label{sec:distr_ddpg}
 We present the CVaR optimization algorithm which is the main contribution of this thesis.

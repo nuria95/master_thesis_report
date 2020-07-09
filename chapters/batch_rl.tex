@@ -223,7 +223,7 @@ where
     \hat{a} = D_w(x^B, z_{CLIP}) \quad z_{CLIP} = \text{clip}(z, -0.5,0.5) \;z \sim \mathcal{N}(0,Id)
 \end{equation}
 
-Critic training is done in the same way  as the original algorithm,
+We train the critic in the same way as the original algorithm,
 using a critic target network to estimate the target values 
 which slowly tracks the learnt networks.
 $a_{k+1}$ actions used to compute target Z values $Z(x_{k+1}^B,a_{k+1}; \tau_i)$,

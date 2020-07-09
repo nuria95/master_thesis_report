@@ -2,8 +2,7 @@
 \label{sec:introduction}
 
 
-% Decision-making is the process of taking choices by identifying an optimal strategy
-% from current system states. 
+\section{Introduction}
 In sequential decision-making problems, an agent interacts with an environment by 
 selecting actions and in turn, it observes the state transitions of the system and it receives a reward.
 The decision-maker or \textit{agent} uses a performance measure to assess how good actions were.\\
@@ -49,12 +48,12 @@ This space may be restricted by different constraints such as ensuring that
 the expectation of costs \citep{Geibel2006} or the variance of return doesn't exceed
 a given threshold \citep{Tamar2012}.
 This constraint problems can be converted to equivalent unconstrained ones by using
-penalty methods or a Lagrangian approach.
-
+penalty methods or a Lagrangian approach.\\
 Finally, risk-sensitive criterion uses other utility metrics to be maximized instead of
 expectation of cumulative rewards.
 Lot of research has been done using exponential utility functions
-\citep{Howard1972,Chung1987}.\\
+\citep{Howard1972,Chung1987}.
+
 Our approach aims to maximize
 another risk metric, namely the Conditional Value at Risk (CVaR).
 Non-formally, CVaR of a return distribution at confidence level $\alpha$ can be defined as the expected
@@ -65,12 +64,13 @@ For example,
 it has recently been identified by \citet{Majumdar2020} as a suitable metric
 for measuring risk in robotics.
 
+\section{Related Work}
+
 CVaR optimization aims to find the parameters $\theta$ that maximizes 
 $\text{CVaR}_\alpha (Z)$, where the return distribution $Z$ is parameterized by a 
 controllable parameter $\theta$ such that: $Z = f(X; \theta)$.\\
 In the simplest scenarios, where $X$ is not dependant on $\theta$ CVaR optimization may 
 be solved using various approaches such as in \citet{Rockafellar2000}.\\
-
 However, in RL, the tunable parameter $\theta$ also affects the 
 distribution of $X$ and therefore, the standard existing approaches for CVaR optimization 
 are not suitable.\\
@@ -81,25 +81,28 @@ and not much research has been done for the RL framework.
 Under the RL framework, \citet{Morimura2010a} and \citet{Morimura2010b}
 focused on estimating the density of the returns
 to handle CVaR risk criteria. However, the resulting distributional-SARSA-with-CVaR algorithm
-they propose has  proved  effectiveness  only  in  very  simple  and discrete MDPs.\\
+they propose has  proved  effectiveness  only  in  very simple  and discrete MDPs.
+
 \citet{Tamar2015a} proposed a policy gradient (PG) algorithm for CVaR optimization, by
 deriving a sampling based estimator for the gradient of CVaR and using it to optimize the
 CVaR via stochastic gradient descent. However, they only considered continuous loss distributions
 and they used empirical $\alpha$-quantile to estimate 
 $\text{VaR}_\alpha$ which is known to be a biased estimator for small samples.\\
 \citet{Chow2014} also proposed a PG algorithm for mean-CVaR optimization, which has several
-disadvantages also shared with \citet{Tamar2015}. First, by definition of PG algorithms,
+disadvantages also shared with \citet{Tamar2015}. First, being PG algorithms,
 they suffer from high variance on the gradient estimates, especially when the trajectories
 are long. This high variance is even more exacerbated when using very low quantiles $\alpha$ for the CVaR 
 since the averaging on the rewards is effectively only on $\alpha$N samples.
 Second, they are both very sample inefficient since only the rewards below the quantile
 are used to compute the gradient. Third, they are both trajectory-based (not incremental), 
-i.e they only update after observing one or more full trajectories.\\
+i.e they only update the parameters after observing one or more full trajectories.\\
 \citet{Chow2014} also proposed both a trajectory-based and incremental actor-critic
 approaches which help in reducing the variance of PG algorithms. However, they require
 state augmentation of the original MDP formulation to a state-space
 $\mathcal{X} \times \mathcal{S}$ where $\mathcal{S} \in \mathbb R$ is an additional continuous
-state that allows to reformulate the Lagrangian objective function as an MDP.
+state that allows to reformulate the Lagrangian objective function as an MDP and still,
+they need to make use of several approximations to allow the algorithm be fully incremental and 
+avoid sparse updates of the parameters. 
 
 It is also important to be noticed that all the aforementioned algorithms are on-policy approaches.
 This is first another source of sample inefficiency
@@ -107,28 +110,7 @@ because they cannot exploit data from experts or other sources. Additionally the
 constraint the learning process to happen online while interacting with the environment,
 which in real-case scenarios, it is paradoxically risky.
 
-The CVaR optimization algorithm that we introduce has 2 main properties that so far,
-we do not have knowledge any other algorithm for CVaR optimization in the RL setting has; 
-namely, being an off-policy algorithm and using deterministic policies.\\
-Being off-policy means that the algorithm can learn the optimal policy from data collected
-from another policy. Hence, we can use a more exploratory \textit{behavior} policy to interact
-with the environment and collect observations, and then use them to train
-the optimal \textit{target} policy. 
-Additionally to the fact of making exploration easier compared to on-policy algorithms,
-being off-policy allows the possibility to learn from data generated by a conventional
-non-learning controller or from a human expert, setting mostly called in literature as
-\textit{Batch RL} or \textit{offline RL}.
-This application is really appealing when working with risky environments, when we do
-not want to expose the learning agent to its risks at the earlier stages of the learning
-process.
-
-
-The second property is the fact that we use a target policy which is deterministic.
-Using stochastic policies is not natural in many applications and it
-could increase the variance of the return \todo{\citet{Feinberg2008}/\citet{Taleghan2018}/nothing}.
-When again, working in an stochastic 
-environment and with the goal of finding risk-aware policies, using a policy which is stochastic 
-sounds quite counterintuitive.
+\section{Our approach}
 
 In this thesis, we propose a CVaR optimization approach based on a model-free, off-policy
 deterministic actor-critic algorithm using deep function approximators. 
@@ -139,14 +121,44 @@ to estimate the full
 \textit{value distribution} (i.e. the distribution of the random return received by a RL agent).
 A critic learns a parameterization of the value distribution and 
 the actor, is trained towards policies that maximize the CVaR of the returns 
-by sampling from the parameterized value distribution and performing stochastic gradient ascent.
+by sampling from the parameterized value distribution and performing stochastic gradient ascent.\\
+In this line, we would like to mention the research by \citet{BarthMaron2018}, where they also adapt
+the distributional perspective on RL to the continuous setting using deterministic policy gradients.
+However, they use a more restrictive distribution representation and they do not focus on risk-sensitive
+policies but still on maximizing the expected return.
+
+The CVaR optimization algorithm that we introduce has 2 main properties that so far,
+we do not have knowledge any other algorithm for CVaR optimization in the RL setting has; 
+namely, being an off-policy algorithm and using deterministic policies.\\
+Being off-policy means that the algorithm can learn the optimal policy from data collected
+from another policy. Hence, we can use a more exploratory \textit{behavior} policy to interact
+with the environment and collect observations, and then use them to train
+the optimal \textit{target} policy. \\
+Additionally to the fact of making exploration easier compared to on-policy algorithms,
+being off-policy allows the possibility to learn from data generated by a conventional
+non-learning controller or from a human expert, namely learning under, how is called in
+literature, \textit{Batch RL} or \textit{offline RL} setting. \todo{recheck}
+This application is really appealing when working with risky environments, when we do
+not want to expose the learning agent to its risks at the earlier stages of the learning
+process.
+
+The second property is the fact that we use a target policy which is deterministic.
+Using stochastic policies is not natural in many applications and it
+could increase the variance of the return \citet{Taleghan2018}.
+When again, working in an stochastic 
+environment and with the goal of finding risk-aware policies, using a policy which is stochastic 
+sounds quite counterintuitive.
+
+
 
 We show algorithm performance in two different settings.
 First, in the most common off-policy RL setting in which the environment simulator is given and
 the agent can interact with it to collect new data from time to time.
-Second, and most powerful, the agent is trained completely offline by using an external
-dataset and no further interaction with the environment is allowed.
+Second, and most importantly, the agent is trained completely offline by using an external
+dataset and when no further interaction with the environment is allowed.
 For the 2 settings, the algorithm learns risk-sensitive policies in
 complex high-dimensional, continuous action spaces
 such as for some modified environments from the Open AI Gym toolkit and from D4RL,
 a recent suite of tasks and datasets for benchmarking progress in offline RL.
+
+We think that our algorithm ... \todo{final motivation sentence}

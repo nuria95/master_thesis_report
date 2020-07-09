@@ -13,11 +13,11 @@ changes in the data distribution.
 2) use \textit{target Q networks} that are only periodically updated, to update the Q network during temporal difference backups to reduce
 correlations with the target.
 
-Observations $(x_t,a_t,r_t,x_{t+1})$ were sampled from the environment when acting under behavior policy $\beta$ and stored
-in a fixed-sized (we used size of $10^6$). When full, oldest samples were discarded.
+The agent perceives observations $(x_t,a_t,r_t,x_{t+1})$ when acting on the environment under behavior policy $\beta$ and stores them
+in a fixed-sized (we used size of $10^6$). When full, oldest samples are discarded.
 Since the algorithm is off-policy, the buffer can be large, allowing the algorithm to benefit from
 learning across a set of uncorrelated transitions.
-Exploration was addressed by constructing an exploratory behavior policy $\beta$ by adding noise $\eta$ to the actor policy.
+We address exploration by constructing an exploratory behavior policy $\beta$ by adding noise $\eta$ to the actor policy.
 
 \begin{equation}
     \beta(x_t)=\pi(x_t| \theta^\pi) + \eta
@@ -27,14 +27,14 @@ used an Ornstein-Uhlenbeck process \citep{Uhlenbeck1930} with $\theta = 0.15$ an
 Ornstein-Uhlenbeck process models the velocity of a Brownian particle with friction, which results in temporally correlated
 values centered around the mean ($\mu$=0). \todo{explain more?}
 
-At every training step, a minibatch of observations is sampled from the buffer.
+At every training step, we sample a minibatch of observations from the buffer.
 To estimate the target value for critic training, we use two target networks:  \textit{critic target network} and \textit{actor target network}
 ($\hat{Z}(x,a;\tau | \theta^{\hat{Z}})$ and  $\hat{\pi}(x | \theta^{\hat{\pi}})$) which are initialized
 as their homologues \todo{rename?}, but constrained to slowly track the learnt networks, so that to stabilize learning.
 With this goal, weights of target networks are updated ``softly", via:
 $\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
 
-We additionally, use two insights from TD3 \citet{Fujimoto2018}.
+Additionally, we use two insights from TD3 \citet{Fujimoto2018}.
 First, we update the policy and target networks less frequently than the critic network. As 
 \citet{Fujimoto2018} recommends we do one policy and target networks updates for every 
 two critic network updates. 
@@ -42,24 +42,23 @@ two critic network updates.
 Second, we use target policy smoothing to address a particular failure mode that can happen
 in DeepDPG. To prevent policy to exploit 
 actions for which the critic overestimated its value, target policy smoothing adds noise to target actions
-to smooth out Q over similar actions. Specifically target action used for the TD backup:
+to smooth out Q over similar actions. Specifically, the target actions used for the TD backup are:
 \begin{equation}
     a_{t+1}=\hat{\pi}(x_{t+1} | \theta^{\hat{\pi}} + \text{clip}(\epsilon, -c, c) \quad \epsilon \sim \mathcal{N}(0,\sigma)
 \end{equation}
 where we experimentally set $c=0.5$ and $\sigma=0.2$ and $\mathcal{N}(0,\sigma)$ is a
 Gaussian distribution with mean=0 and standard deviation $\sigma$.
 
-
 To compute the quantile regression loss, we used N'=N=32 quantile levels to sample from
-target and critic networks.This parameter must be kept relatively big but further increasing
+target and critic networks. This parameter must be kept relatively big but further increasing
 it doesn't seem to improve performance.
 To compute the empirical CVaR from the estimated value distribution 
 $Z(x,a; \tau) | \theta^Z)$, we use K=8 quantile levels.
 
 
-Training starts after a warm-up of T=25000 environment interactions. During this time, actor
-networks where not used but random policies where used instead, to enhance exploration.
-Adam optimizer wsa used for learning the neural networks parameters with a learning rate of $10^-4$ and $10^-3$
+We start training after a warm-up of T=25000 environment interactions. During this time, in order
+to enhance exploration, we don't use actor networks but random policies instead.
+We use Adam optimizer for learning the neural networks parameters with learning rates of $10^{-4}$ and $10^{-3}$
 for the actor and the critic respectively.
 For additional information on the networks used, please see Appendix \ref{chap:appendix}
 

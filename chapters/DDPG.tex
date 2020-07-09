@@ -184,8 +184,8 @@ the more general class of approximate quantile functions
 studied in this work?}
 
 \subsection{Actor}
-The policy is updated via deterministic policy gradient ascent.
-We modify equation  \eqref{eq:off_policy_gradient}, to include the action-value distribution.
+We update the policy via deterministic policy gradient ascent.
+We modify equation \eqref{eq:off_policy_gradient}, to include the action-value distribution.
 \begin{align}
     \nabla_{\theta^\pi} J_\beta(\pi | \theta^\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
     \big [\nabla_{\theta^\pi} \pi(x,| \theta^\pi) \nabla_a Q^{\pi}(x,a)|_{a=\pi(x| \theta^\pi)}  \big]\label{eq:distr_dpg_alg1}\\

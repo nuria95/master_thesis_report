@@ -112,6 +112,7 @@ because they cannot exploit data from experts or other sources. Additionally the
 constraint the learning process to happen online while interacting with the environment,
 which in real-case scenarios, it is paradoxically risky.
 
+
 \section{Our approach}
 
 In this thesis, we propose a CVaR optimization approach based on a model-free, off-policy
@@ -128,6 +129,7 @@ In this line, we would like to mention the research by \citet{BarthMaron2018}, w
 the distributional perspective on RL to the continuous setting using deterministic policy gradients.
 However, they use a more restrictive distribution representation and they do not focus on risk-sensitive
 policies but still on maximizing the expected return.
+
 
 The CVaR optimization algorithm that we introduce has 2 main properties that so far,
 we do not have knowledge any other algorithm for CVaR optimization in the RL setting has; 
@@ -151,6 +153,18 @@ When again, working in an stochastic
 environment and with the goal of finding risk-aware policies, using a policy which is stochastic 
 sounds quite counterintuitive.
 
+In a similar line we would like to mention the recent research by \citet{tang2020}, in
+which they also use deterministic policy gradient algorithm and a distributional critic for
+CVaR optimization. However, their approach differs from ours since they decide to
+approximate the return distribution up to its 2n order-statistics,
+i.e represent it using its mean and variance. They model the distribution as a gaussian, and in
+that way they can compute a closed-from calculation for the CVaR.
+Despite they show its good performance in a self-driving environment, we consider
+using a Gaussian approximation for the return distribution can be a bit restrictive, by the fact that it is light-tailed and
+unimodal. 
+One of the motivations for using CVaR instead of other metrics is the fact that it takes into account
+the distribution of the tails. Using a  return distribution which is unimodal, may lead to omission of
+bumps in the left-tail of the distribution which wastes one of the capabilities of the CVaR as a metric.
 
 
 We show algorithm performance in two different settings.

@@ -30,7 +30,7 @@ values centered around the mean ($\mu$=0). \todo{explain more?}
 At every training step, we sample a minibatch of observations from the buffer.
 To estimate the target value for critic training, we use two target networks:  \textit{critic target network} and \textit{actor target network}
 ($\hat{Z}(x,a;\tau | \theta^{\hat{Z}})$ and  $\hat{\pi}(x | \theta^{\hat{\pi}})$) which are initialized
-as their homologues \todo{rename?}, but constrained to slowly track the learnt networks, so that to stabilize learning.
+like their counterparts, but constrained to slowly track the learnt networks, so that to stabilize learning.
 With this goal, weights of target networks are updated ``softly", via:
 $\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
 

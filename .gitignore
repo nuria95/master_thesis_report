@@ -7,5 +7,5 @@
 *.fls
 *.fdb_latexmk
 *.out
-chapters/details_vae.tex
+chapters/details_vae_old.tex
 

@@ -163,7 +163,21 @@ Since computing the desired marginal $P_\mathcal{B}(A|X; \theta)$ is intractable
 
 For our implementation, the prior $p(z; \theta)$ is chosen to be a multivariate normal
 distribution $\mathcal{N}\big( 0,Id\big )$, hence it doesn't require parameters $\theta$.
+\todo{caption add name of alg}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/diagram.pdf}
+    \caption{Graphical representation of the algorithm.
+    Algorithm is implemented fully off-policy using an external training dataset obtained
+    for example, by a human expert or an on-policy RL algorithm.
+    Algorithm can be divided in 3 main blocks: the \textit{critic} which learns 
+    the action value distribution via quantile regression TD-learning, the \textit{VAE generative model}
+    that learns to generate actions similar to actions present in the training dataset and
+    the \textit{actor} which learns a policy to maximize the CVaR trained
+    via deterministic gradient ascent of the CVaR computed with the critic estimated distribution. }
+    \label{fig:diagram}
 
+\end{figure}
 For the probabilistic encoders and decoders we use neural networks.
 For the encoder $q(z|a,x;\phi)$ we used a neural network with  Gaussian output, specifically a 
 multivariate Gaussian with a diagonal covariance structure $\mathcal{N}(z | \mu(a,x;\phi), \sigma^2(a,x)Id ; \phi)$,
@@ -205,6 +219,10 @@ The perturbation model is trained as in \ref{eq:alg2}:
 \big [\nabla_{\theta^\xi} \xi(x,\hat{a}| \theta^\xi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
 \sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\xi(x,\hat{a}| \theta^\xi)}  \big] \label{eq:algbatchrl_2}
 \end{align}
+
+Figure \ref{fig:diagram} shows a graphical representation of the algorithm with its 3 main parts:
+the critic learning the value distribution, the actor learning the CVaR maximization policy and
+the generative model learning to generate actions similar to the ones in the dataset.
 
 \section{Technical details}
 Algorithm works very similarly to the off-policy RL previously presented, and hence shares almost all details

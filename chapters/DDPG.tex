@@ -178,10 +178,7 @@ Then the quantile Huber loss is the asymmetric variant of the Huber loss:
 Quantile loss penalizes overestimation errors (u$<$0) with weight $1-\tau$ and underestimation
 errors (u$>$0)with weight $\tau$.
 By minimizing \ref{eq:qr_loss} via stochastic gradient descent with respect to $\theta^Z$
-we aim to move towards the true quantile function. \todo{Mentioned in \citet{Dabney2018b} can the contraction
-mapping results for a fixed grid of quantiles given by Dabney et al. (2018) be extended to
-the more general class of approximate quantile functions
-studied in this work?}
+we aim to move towards the true quantile function.
 
 \subsection{Actor}
 We update the policy via deterministic policy gradient ascent.

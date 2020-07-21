@@ -1,3 +1,33 @@
 \chapter{Discussion}
 \label{sec:discussion}
-To be written.
+
+In this thesis we proposed $\thename$, a novel actor-critic framework to learn
+risk-sensitive policies by maximizing CVaR.
+The algorithm can be implemented fully off-policy, hence it can learn from a fixed dataset without
+further interaction with the environment, which is crucial for tasks where
+the data collection procedure is costly, time-consuming and, most importantly for our goal,
+when it is risky.
+
+By using a distributional RL approach to learn the full value distribution, our algorithm has the
+ability to learn policies with different level of risk-aversity depending on the 
+confidence level selected.\\
+We tested performance in several environments and showed difference in learnt policies
+depending on the chosen confidence level, ones maximizing the mean of the return 
+to the detriment of rare 
+high penalizations happening and the others, reducing expected value but ensuring no high
+penalizations occur.\\
+When testing for complex robotics Mujoco environments, we actually can see how the fact of maximizing for the
+CVaR can accelerate training and reach overall better performances than when
+maximizing for the expected value.\\
+A more detailed analysis of the effect of the confidence level on training times and final 
+performance could be done in the future, as well as, the effect on the maximal perturbation level 
+allowed to the actor network on the VAE generated actions.\\
+Additionally, we could test the algorithm in other environments such as for
+autonomous navigation or healthcare applications where a lot of offline data is available and where
+catastrophic events prevention is crucial.
+
+Due to the appeal of offline RL which enables data to be turned into generalizable
+decisions making engines, and risk of learnt actions being one of main concerns in current RL
+approaches,
+we believe $\thename$, an offline RL approach accounting for risk,
+looks promising for advancing in the safe and generalizable data-driven RL area. 

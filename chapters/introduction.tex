@@ -6,7 +6,7 @@
 In sequential decision-making problems, an agent interacts with an environment by
 selecting actions according to a policy 
 and in turn, it observes the state transitions of the system and it receives a reward.\\
-During this interaction, different sources of irreducible 
+During this interaction different sources of irreducible 
 randomness are introduced in the system due to modelling errors or inherent stochasticity of the environment.
 % The decision-maker or \textit{agent} uses a performance measure to assess how good actions were.\\
 The most common optimization criterion for the decision maker to assess how good actions were, 
@@ -39,7 +39,7 @@ We will focus on the first category, which can be divided into 3 subcategories: 
 criterion, constrained criterion and risk-sensitive criterion.\\
 Worst-case or minimax criterion has been studied by \citet{Heger1994}, 
 \citet{Coraluppi1997} and \citet{Coraluppi1999},
-in which the objective is to compute a control policy that maximizes the expcted return
+in which the objective is to compute a control policy that maximizes the expected return
 with respect to the worst case scenario. In general, minimax criterion has
 been found to be too restrictive as it takes into
 account severe but extremely rare events which may never occur.\\
@@ -47,9 +47,9 @@ Constrained criterion  aims to maximize the expected return while keeping
 other types of expected utilities higher than some given bounds \citep{Altman1993}.
 It may be seen as finding the best policy $\pi$ in the space of considered safe policies.
 This space may be restricted by different constraints such as ensuring that
-the expectation of costs \citep{Geibel2006} or the variance of return doesn't exceed
+the expectation of costs \citep{Geibel2006} or the variance of return don't exceed
 a given threshold \citep{Tamar2012}.
-This constraint problems can be converted to equivalent unconstrained ones by using
+These constraint problems can be converted to equivalent unconstrained ones by using
 penalty methods or a Lagrangian approach.\\
 Finally, risk-sensitive criterion uses other utility metrics to be maximized instead of
 expectation of cumulative rewards.
@@ -71,14 +71,14 @@ for measuring risk in robotics.
 CVaR optimization aims to find the parameters $\theta$ that maximizes 
 $\text{CVaR}_\alpha (Z)$, where the return distribution $Z$ is parameterized by a 
 controllable parameter $\theta$ such that: $Z = f(X; \theta)$.In the simplest scenarios, 
-where $X$ is not dependant on $\theta$ CVaR optimization may 
+where $X$ is not dependant on $\theta$, CVaR optimization may 
 be solved using various approaches such as in \citet{Rockafellar2000}.\\
 However, in RL, the tunable parameter $\theta$ also affects the 
 distribution of $X$ and therefore, the standard existing approaches for CVaR optimization 
 are not suitable.\\
 Additionally, most of the work with such a goal has been done in the context of MDPs when
-the model is known  by using dynamic programming methods \citep{Chow2015, Petrik2012},
-and not much research has been done for the RL framework.
+the model is known  by using dynamic programming methods \citep{Chow2015, Petrik2012}
+but not much research has been done for the RL framework.
 
 Under the RL framework, \citet{Morimura2010a} and \citet{Morimura2010b}
 focused on estimating the density of the returns
@@ -131,9 +131,8 @@ However, they use a more restrictive distribution representation and they do not
 policies but still on maximizing the expected return.
 
 
-The CVaR optimization algorithm that we introduce has 2 main properties that so far,
-we do not have knowledge any other algorithm for CVaR optimization in the RL setting has; 
-namely, being an off-policy algorithm and using deterministic policies.\\
+The CVaR optimization algorithm that we introduce has 2 remarkable properties, 
+namely being an off-policy algorithm and using deterministic policies.\\
 Being off-policy means that the algorithm can learn the optimal policy from data collected
 from another policy. Hence, we can use a more exploratory \textit{behavior} policy to interact
 with the environment and collect observations, and then use them to train
@@ -160,21 +159,28 @@ approximate the return distribution up to its 2n order-statistics,
 i.e represent it using its mean and variance. They model the distribution as a gaussian, and in
 that way they can compute a closed-from calculation for the CVaR.
 Despite they show its good performance in a self-driving environment, we consider
-using a Gaussian approximation for the return distribution can be a bit restrictive, by the fact that it is light-tailed and
-unimodal. 
-One of the motivations for using CVaR instead of other metrics is the fact that it takes into account
-the distribution of the tails. Using a  return distribution which is unimodal, may lead to omission of
+that using a Gaussian approximation for the return distribution can be a bit restrictive, by the fact that it is light-tailed and
+unimodal. One of the motivations for using CVaR instead of other metrics is the fact that it takes into account
+the distribution of the tails. Using a  return distribution which is unimodal may lead to omission of
 bumps in the left-tail of the distribution which wastes one of the capabilities of the CVaR as a metric.
 
 
 We show algorithm performance in two different settings.
 First, in the most common off-policy RL setting in which the environment simulator is given and
-the agent can interact with it to collect new data from time to time.
+the agent can interact with it during training to collect new data from time to time.
 Second, and most importantly, the agent is trained completely offline by using an external
 dataset and when no further interaction with the environment is allowed.
-For the 2 settings, the algorithm is able to learn risk-sensitive policies in
-complex high-dimensional, continuous action spaces
-such as for some modified environments from the Open AI Gym toolkit and from D4RL,
-a recent suite of tasks and datasets for benchmarking progress in offline RL.
 
-We think that our algorithm ... \todo{final motivation sentence}
+We first test performance in a toy car example and then we upgrade towards more complex environments
+from D4RL \citep{d4rl}, a recent suite of tasks and datasets for benchmarking progress in offline RL.
+Specially we focus on robotic tasks developed in the Mujoco Physics simulator \citep{Todorov2012},
+but we are confident our approach could be extended to other areas, such as 
+for medical applications or autonomous navigation.
+We show our algorithm ability to minimize risk in terms of 
+tail performance by introducing
+stochasticity in the original cost function of the environments and comparing the learnt policies
+by the risk-averse setting and by the risk-neutral one.
+
+We hereby confirm our algorithm is able to learn risk-sensitive policies in
+complex high-dimensional, continuous action spaces.
+

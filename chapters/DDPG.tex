@@ -1,22 +1,23 @@
-\chapter{Distributional Deterministic Off-policy Actor-critic algorithm for CVaR optimization}
+\chapter{The $\thename$ algorithm}
 \label{chapter:algo}
 
-We introduce an off-policy, model-free algorithm for CVaR optimization using deep function approximators
-that can learn policies in high-dimensional, continuous action spaces.
-Our work is based on the deterministic policy gradient algorithm.\\
+We introduce $\thename$, an off-policy, model-free algorithm for CVaR optimization using deep function approximators
+that can learn policies in high-dimensional, continuous action spaces.\\
+Our work is based on the deterministic policy gradient algorithm.
 Specifically, we use an actor-critic approach: the critic uses a distributional variant
 of RL and it is trained to estimate the whole value distribution, whereas the actor
 is trained via gradient ascent to maximize the CVaR of this distribution.\\ 
-In the following we briefly describe the standard DPG algorithm \ref{sec:DPG}, then we introduce
-our distributional approach and how we use it to obtain risk-sensitive policies \ref{sec:distr_ddpg}
-and in the last section, we focus more on implementation details of the algorithm, 
-especially explaining more about the neural networks we use and providing a
-pseudocode \ref{sec:technical_details}.
-
+In \ref{sec:DPG} we briefly describe the standard DPG algorithm and its variants,
+then in \ref{sec:distr_ddpg} we introduce
+our $\thename$ algorithm and how we use it to obtain risk-sensitive policies,
+in \ref{sec:technical_details} we focus on implementation details of the algorithm and we provide
+a pseudocode \ref{pseudocode:algo1} and in \ref{sec:other_cvar_computations} and \ref{sec:other_risk_measures} we present
+other alternatives for computing CVaR and other possible risk metrics that could be used without varying
+the algorithm.
 Extensive and more theoretical information on the distributional RL approach is addressed in 
-appendix \ref{appendix:distRL}.
+appendix \ref{chap:appendix_distRL}.
 
-\section{Off-policy Deterministic Actor-Critic} \label{sec:DPG} \todo{change title not to repeat with subsection?}
+\section{Deterministic Policy Gradients} \label{sec:DPG}
 \subsection{Preliminaries}
 
 Goal in standard RL is to learn a policy $\pi^*$ which maximizes the expected return or (discounted) cumulative
@@ -37,8 +38,8 @@ successor states:
 DPG algorithm \citep{silver2014b} is characterized for using deterministic policies $a_t=\mu_{\theta}(x_t)$.\\
 In general, behaving according to a deterministic policy does not ensure adequate exploration
 and may lead to suboptimal solutions. 
-However, if the policy is deterministic, we can remove the inner expectation with respect 
-to $a_{t+1}$ in \ref{eq:bellman1} and then, crucially, the expected cumulative reward in the next-state 
+However, if the policy is deterministic we can remove the inner expectation with respect 
+to $a_{t+1}$ in \ref{eq:bellman1} and then crucially, the expected cumulative reward in the next-state 
 depends only on the environment and not on the policy distribution used to create the samples.
 \begin{equation}
     Q^\pi(x_t,a_t) = \mathbb E_{r_t \sim R,x_{t+1} \sim P}\Big[ r(x_t,a_t) + \gamma Q^\pi(x_{t+1},\pi(x_{t+1}))\Big]
@@ -57,16 +58,15 @@ value function $Q^*$ by iteratively applying the Bellman optimality operator to 
     Q(x_t,a_t) \leftarrow \mathbb E_{r_t \sim R,x_{t+1} \sim P}\Big[ r(x_t,a_t) + \gamma \underset{a_{t+1}} \max Q(x_{t+1},a_{t+1})\Big]
 \end{equation}
 which is a contraction mapping proved to converge exponentially to $Q^*$, and then
-derives the optimal policy $\pi^*$from it via the greedy policy $a^*=\underset{a}{\text{argmax}} Q^*(x,a)$.
+derives the optimal policy $\pi^*$ from it via the greedy policy $a^*=\underset{a}{\text{argmax}} Q^*(x,a)$.
 
 When dealing with continuous actions, it is not possible to apply Q-learning
 straight-forward because finding the greedy policy requires an optimization of $a$ at 
 every timestep, which is too slow to be practical with large action spaces.
-In this case, policy gradient methods are used in which a \textit{parameterized policy} is learnt 
-to be able to select actions without consulting the value function.
+In this case, policy gradient methods are used in which a parameterized policy is learnt 
+alongside the Q-function to be able to select actions without consulting the value function.
 
-
-\subsection{Deterministic policy gradients}
+\subsection{The Deterministic policy gradient}
 The deterministic policy gradient described by \citet{silver2014b} updates the parameters of the
 deterministic policy $\pi_\theta$ via gradient ascent to maximize an objective function $J(\pi_\theta)$:
 \begin{align}
@@ -78,24 +78,29 @@ where $\rho^\pi$ is the discounted state distribution when acting under policy $
 
 
 \subsection{Off-policy Deterministic actor-critic} \label{subsec:offpolicy_actor_critic}
-When we both learn approximations of Q and policy, the method is called deterministic actor-critic.
+When we both learn approximations of the policy and the value function, the method is called deterministic actor-critic.
 Actor-critic algorithms combine the basic ideas from policy gradients and approximate dynamic programming.
 The actor is the learned policy which is updated with respect to the current value estimate, or critic.
 \cite{Sutton1998}.
 
-Unlike Q-learning, which directly attempts to learn the optimal Q-function, actor-critic methods aim to learn the Q-functions
-corresponding to the current parameterized policy $\pi|\theta^\pi$.
-In the off-policy setting, the critic parameterized by $\theta^Q$ estimates the 
+Actor-critic methods are closely related with policy iteration methods \citep{Lagoudakis2004}
+which consists of two phases: policy evaluation and policy improvement. \\
+Unlike Q-learning, which directly attempts to learn the optimal Q-function, policy evaluation
+phase computes the Q-function for the current policy $\pi$, $Q^\pi$, by solving
+for the fixed point such that $Q^\pi=\mathcal{T}^\pi Q^\pi$.
+In the off-policy setting, as discussed previously, the critic (parameterized by $\theta^Q$), can estimate the 
 action-value function $Q^{\pi}(x,a)$ \textit{off-policy}  from
-trajectories generated by a behavior policy $\beta$ (discussed in \ref{par:offpolicy}) 
+trajectories generated by a behavior policy $\beta$
 using the Bellman equation.
 It learns by minimizing the loss:
 \begin{align}
-    \mathcal{L}(\theta^Q) = \mathbb E_{x_t\sim \rho^\beta, a_t\sim \beta, r_t\sim E} \Big[ (Q(x_t,a_t| \theta^Q)-y_t)^2          \Big] \nonumber\\ 
+    \mathcal{L}(\theta^Q) = \mathbb E_{x_t\sim \rho^\beta, a_t\sim \beta} \Big[ (Q(x_t,a_t| \theta^Q)-y_t)^2          \Big] \nonumber\\ 
     y_t = r(x_t,a_t) + \gamma Q(x_{t+1},\pi(x_{t+1})| \theta^Q) \label{eq:bellman_loss}
 \end{align}
 
-The actor, parameterized by $\theta^\pi$, updates its parameters via gradient ascent by
+Policy improvement phase is done by choosing the action that greedily maximizes the Q-value at
+each state.
+With this aim, the actor (parameterized by $\theta^\pi$) updates its parameters via gradient ascent by
 using the off-policy deterministic policy gradient \citet{silver2014b}:
 \begin{align}
     J_\beta(\pi | \theta^\pi) &= \int_\mathcal{X} \rho^\beta(s)Q^{\pi}(x,\pi (x| \theta^\pi))dx \nonumber\\
@@ -104,23 +109,15 @@ using the off-policy deterministic policy gradient \citet{silver2014b}:
 \end{align} 
 where $\rho^\beta$ is the discounted state distribution when acting under behavior policy $\beta$.
 By propagating the gradient through both policy and Q, the actor learns an approximation to the
-maximum of the value function under target policy $\pi$
-averaged over the state distribution of the behavior policy $\beta$.
-
+maximum of the value function under policy $\pi$
+averaged over the state distribution of the behavior policy $\beta$.\\
 A term that depends on $\nabla_{\theta^\pi} Q^{\pi}(x,a)$ has been 
 dropped in \ref{eq:off_policy_gradient}, following a justification
 given by \cite{Degris2012} that argues that this is a good approximation since it can
 preserve the set of local optima to which gradient ascent converges.
 
-Actor-critic methods are closely related with policy iteration methods \citep{Lagoudakis2004}. 
-Policy iteration consists of two phases: policy evaluation and policy improvement. 
-Policy evaluation phase computes the Q-function for the current policy $\pi$, $Q^\pi$, by solving
-for the fixed point such that $Q^\pi=\mathcal{T}^\pi Q^\pi$, which can be done via gradient updates of 
-the loss \ref{eq:bellman_loss}. Policy improvement is done by choosing the action that greedily maximizes the Q-value at
-each state which can be done by using a gradient based update procedure as in \ref{eq:off_policy_gradient}.
-
-\section{The algorithm: Distributional off-policy deterministic actor critic} \label{sec:distr_ddpg}
-We present the CVaR optimization algorithm which is the main contribution of this thesis.
+\section{The $\thename$ algorithm} \label{sec:distr_ddpg}
+We present the $\thename$ algorithm, which is one of the main contribution of this thesis.
 The algorithm is based on the original off-policy deterministic actor critic explained
 in previous subsection \ref{subsec:offpolicy_actor_critic}, but introduces a distributional
 critic, which estimates the whole value distribution instead of only its expected value.
@@ -130,7 +127,7 @@ We proceed to present the components of the algorithm.
 
 
 \subsection{Distributional Critic}
-We use a distributional variant of the standard critic function,
+We use a distributional variant of the standard critic function
 which maps from state-action pairs to distributions, inspired by the implicit quantile network (IQN) introduced in \cite{Dabney2018b}.\\
 IQN is a deterministic parametric function trained to reparameterize samples from a
 base distribution, e.g $\tau \in U([0,1])$, to the respective
@@ -141,15 +138,21 @@ distribution function $F(z):=P(Z\leq z)$ and we define $F^{-1}_Z(\tau):=Z(x,a;\t
 at $\tau \in [0,1]$.
 Thus, for $\tau \in U([0,1])$, the resulting state-action return distribution sample is
 $Z(x,a;\tau)\sim Z(x,a)$.\\
-The critic IQN $Z(x,a;\tau| \theta^Z)$ parameterized by $\theta^Z$  is hence a parametric function
+The IQN critic $Z(x,a;\tau)$ parameterized by $\theta^Z$  is hence a parametric function
 used to represent the quantile function at specific quantile levels.
 
-As in \citet{Dabney2018b},we train the critic IQN using the sampled quantile regression
-loss \citep{koenker2005} on the pairwise temporal-difference (TD)-errors.
-For two samples $\tau, \tau' \sim U([0,1])$, and current policy $\pi_{\theta^\pi}$, the sampled
-TD error is:
+As in \citet{Dabney2018b},we train the IQN critic using the sampled quantile regression
+loss \citep{koenker2005} on the pairwise temporal-difference (TD)-errors.\\
+Quantile regression $\rho_{\tau}(u)$ is a method for approximating quantile functions of a distribution at specific points.
+The quantile regression loss for quantile $\tau \in [0,1]$ is an asymmetric convex lox function
+that penalizes underestimation errors (u$<$0) with weight $1-\tau$ and underestimation
+errors (u$>$0) with weight $\tau$. See figure \ref{fig:quantile_loss} for a graphical representation. 
+
+For two samples $\tau, \tau' \sim U([0,1])$, current policy $\pi$ (parameterized by $\theta^\pi$) and
+replay buffer tuple $(x_{t},a_t,x_{t+1},r_t)$
+the sampled TD error is:
 \begin{align}
-    \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1}|\theta^\pi);\tau'| \theta^Z)-Z(x_t,a_t;\tau|\theta^Z)
+    \delta^{\tau, \tau'} = r_t + \gamma Z(x_{t+1},\pi(x_{t+1});\tau')-Z(x_t,a_t;\tau)
 \end{align}
 Then, we compute the loss over the quantile samples:
 \begin{equation}
@@ -157,9 +160,9 @@ Then, we compute the loss over the quantile samples:
 \end{equation}
 where N and N' are the number of iid samples $\tau_i, \tau_j' \sim U([0,1]$ used to estimate the loss and
 where $\rho^\kappa_\tau$ is the quantile Huber loss.\\
-Quantile Huber loss acts as an assymetric squared loss in an interval $[-\kappa, \kappa]$ around zero
+Quantile Huber loss acts as an asymmetric squared loss in an interval $[-\kappa, \kappa]$ around zero
 and reverts to a standard quantile loss outside this interval.\\
-The Huber loss is given by \citet{Huber1964}:
+The Huber loss \citep{Huber1964} is given by:
 \begin{equation}
     \mathcal{L}_\kappa(u)  = \left\{
 	    \begin{array}{ll}
@@ -175,10 +178,11 @@ Then the quantile Huber loss is the asymmetric variant of the Huber loss:
     \rho_\tau^\kappa(u)=\Big|\tau - \mathds{1}_{\{u<0\}}\Big|\mathcal{L}_\kappa(u) , \forall u \in \mathbb{R}
 \end{align}
 
-Quantile loss penalizes overestimation errors (u$<$0) with weight $1-\tau$ and underestimation
-errors (u$>$0)with weight $\tau$.
-By minimizing \ref{eq:qr_loss} via stochastic gradient descent with respect to $\theta^Z$
-we aim to move towards the true quantile function.
+Loss \ref{eq:qr_loss} gives unbiased sample gradients and hence we can
+minimize it with respect to $\theta^Z$ by stochastic gradient descent. Doing so, we 
+find the parameters $\theta^Z$ to estimate the true quantile function.\\
+For additional information
+and reasoning on the approach we address the reader to the appendix section \ref{sec:appendix_quantile_approximation}.\\
 
 \subsection{Actor}
 We update the policy via deterministic policy gradient ascent.
@@ -198,24 +202,22 @@ Step from \eqref{eq:distr_dpg_alg1} to \eqref{eq:distr_dpg_alg2} comes by the fa
 \end{equation}
 
 With our goal of CVaR optimization in mind:
-
 \begin{equation}
      \arg \underset{\pi}\max \text{CVaR}_\alpha [Z (x, \pi(x))] \quad \forall x \in \mathcal{X}
 \end{equation}
 we can make use of the information provided by the Z distribution to 
-optimize other objective functions rather than the expected value.
-
+optimize other objective functions rather than the expected value.\\
 To approach this, we use as a performance objective 
 the distorted expectation of Z(x,a) under the distortion risk measure $\phi: [0,1] \ra [0,1]$, with
 identity corresponding to risk-neutrality, i.e.:
 \begin{equation}
     Q_\phi(x,a) = \mathbb E_{\tau \sim U([0,1])} [Z_{\phi(\tau)}(x,a)] \label{eq:risk_policy}
 \end{equation}
-which is actually equivalent to the expected value of $F^{-1}_{Z(x,a)}$ weighted by $\phi$, i.e.:
+which is equivalent to the expected value of $F^{-1}_{Z(x,a)}$ weighted by $\phi$, i.e.:
 \begin{equation}
     Q_\phi(x,a) = \int_0^1F^{-1}_{Z}(\tau)d\phi(\tau) \label[]{eq:cvar_intuition}
 \end{equation}
-When we use as mapping $\phi(\tau) = \alpha \tau$, \ref{eq:cvar_intuition} corresponds to the 
+When we use $\phi(\tau) = \alpha \tau$ as a mapping, \ref{eq:cvar_intuition} corresponds to the 
  CVaR of Z(x,a) as already presented in \ref{eq:cvar_defs}, and as a reminder:
 \begin{equation}
     \text{CVaR}_\alpha (Z) =  \frac{1}{\alpha} \int_{0}^{\alpha} F^{-1}_Z(\tau) d\tau \label{eq:cvar_defs_repeat}
@@ -231,32 +233,30 @@ $\tau \sim U[0,\alpha]$:
 \qquad \tau_i \sim U[0,\alpha] \quad \forall i \in [1,K]
 \end{equation}
 
-Therefore, we arrive to the formula for the \textit{deterministic risk-sensitive policy gradient},
-for the parameters $\theta^\pi$ of the actor: \todo{call it like that?}
-
+Therefore, we arrive to the formula for the $\thename$ actor parameters $\theta^\pi$ update:
 \begin{align}
-    J_\beta^{CVAR}(\pi | \theta^\pi) &= \int_\mathcal{X} \rho^\beta(s)\text{CVaR}_\alpha(Z^\pi(x,\pi (x| \theta^\pi))dx \nonumber\\
-    \nabla_{\theta^\pi} J_\beta(\pi | \theta^\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
-    \big [\nabla_{\theta^\pi} \pi(x,| \theta^\pi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
-    \sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\pi(x| \theta^\pi)}  \big]
+    J_\beta^{CVAR}(\pi) &= \int_\mathcal{X} \rho^\beta(x)\text{CVaR}_\alpha\Big(Z^\pi(x,\pi (x))\Big)dx \nonumber\\
+    \nabla_{\theta^\pi} J_\beta(\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
+    \big [\nabla_{\theta^\pi} \pi(x) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
+    \sum_{i=1}^K Z(x,a; \tau_i)]|_{a=\pi(x)}  \big]
     \label{eq:actor_grad}
 \end{align}
 where $\tau_i \in U([0,\alpha]) \; \forall i \in [1,K]$\\
 
 
-\section{Summary}
+\subsection{Summary}
 The algorithm can be summed up with:
 
 \begin{enumerate}
     \item Update distributional critic IQN via off-policy quantile-regression TD-learning:
     \begin{align}
-        \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1}|\theta^\pi);\tau'| \theta^Z)-Z(x_t,a_t;\tau|\theta^Z) \label{eq:alg1}
+        \delta^{\tau, \tau'} = r + \gamma Z(x_{t+1},\pi(x_{t+1});\tau')-Z(x_t,a_t;\tau) \label{eq:alg1}
     \end{align}
     \item Update actor via deterministic risk-sensitive policy gradient ascent:
     \begin{align}
-        \nabla_{\theta^\pi} J_\beta(\pi | \theta^\pi) &\approx \mathbb E_{x \sim \rho^\beta} 
-    \big [\nabla_{\theta^\pi} \pi(x,| \theta^\pi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
-    \sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\pi(x| \theta^\pi)}  \big] \label{eq:alg2}
+        \nabla_{\theta^\pi} J_\beta(\pi ) &\approx \mathbb E_{x \sim \rho^\beta} 
+    \big [\nabla_{\theta^\pi} \pi(x) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
+    \sum_{i=1}^K Z(x,a; \tau_i)]|_{a=\pi(x)}  \big] \label{eq:alg2}
     \end{align}
 \end{enumerate}
 
@@ -266,5 +266,6 @@ a more-exploratory behavior policy $\beta$ and we learn a
 target policy $\pi$ (where $\beta \neq \pi$).
 In contrast to stochastic off-policy actor-critic algorithms \citep{Degris2012}, we can avoid
 importance sampling both in the actor and the critic.
-This is due to the deterministic essence of the policies, which removes the integral over actions
-in the policy gradient and the expected value over actions in the Bellman equation for the critic.
+This is thanks to the deterministic essence of the policies, which removes the integral over actions
+in the policy gradient for the actor and removes the expected value over actions in the Bellman equation
+for the critic.

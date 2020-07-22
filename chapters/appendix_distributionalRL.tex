@@ -145,7 +145,7 @@ Another result, shows that we cannot in general minimize the Wasserstein metric,
 viewed as a loss, using stochastic gradient descent methods. This limitation, is crucial
 in a practical context, when the value distribution needs to be approximated.
 
-\subsection{Quantile approximation}
+\subsection{Quantile approximation} \label{sec:appendix_quantile_approximation}
 \cite{Dabney2018a} used the theory of quantile regression \cite{koenker2005}, to
 design an algorithm applicable in a stochastic approximation setting.
 Quantile regression is used to estimate the quantile function at precisely chosen points.
@@ -191,7 +191,7 @@ the 1-Wasserstein distance to Z.\\
 
 \subsection{Quantile Regression}
 Quantile regression is a method for approximating quantile functions of a distribution at specific points.
-The quantile regression loss, for quantile $\tau \in [0,1]$, is an asymmetric convex lox function
+The quantile regression loss for quantile $\tau \in [0,1]$ is an asymmetric convex lox function
 that penalizes underestimation errors with weight $\tau$ and overestimation errors
 with weight $1-\tau$. \\
 For a distribution Z, and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
@@ -214,11 +214,11 @@ of $\{\theta_1, ... \theta_N\}$ that minimize
 This loss gives unbiased sample gradients and hence, we can find the minimizing $\{\theta_1, ... \theta_N\}$
 by stochastic gradient descent.
 
-\begin{figure}[ht]
+\begin{figure}[ht] 
     \centering
     \includegraphics[width=0.8\textwidth]{images/quantile_loss.pdf}
     \caption{Quantile loss for different quantile values}
-    \label{quantile_loss}
+    \label{fig:quantile_loss}
 \end{figure}
 
 Proposition 2 in \cite{Dabney2018a} states that the combined quantile projection 

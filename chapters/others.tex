@@ -1,4 +1,34 @@
-\section{Other distortion risk measures}
+\section{Other approach to compute CVaR} \label{sec:other_cvar_computations}
+
+When changing the sampling distribution for $\tau$ to $U([0,\alpha])$
+to compute the CVaR of the
+distribution, we make use of both the dual formulation \ref{eq:dual_cvar} and Acerbi's
+integral formulas for CVaR.\ref{eq:cvar_defs_repeat}.\\
+A second approach would be to use the \citet{Rockafellar2000} optimization problem
+for CVaR presented in \ref{eq:rockafellar} and as a reminder:
+\begin{equation}
+    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\} \label{eq:rockafellar_repeat}
+\end{equation}
+
+which in the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.\\
+Given the fact that our critic network estimates the $\text{VaR}_\alpha(Z)$ of the
+return distribution, we can compute the CVaR using \ref{eq:rockafellar_repeat}
+by sampling uniformly from  the whole quantile distribution, substracting the current
+estimated VaR for the confidence level  $\alpha$ and truncating the result, that is to say,
+we can compute CVaR via sampling by:
+\begin{align}
+    \text{CVaR}_\alpha(Z) \approx \nu + \frac{1}{\alpha} \frac{1}{K}
+\sum_{i=1}^K \big[ Z(x,a; \tau_i\vert \theta^Z) - \nu \big]^- 
+\end{align}
+
+where $\tau_i \sim U([0,1])$ and $\nu = Z(x,a; \alpha \vert \theta^Z)$.
+
+A disadvantage of such approach is sample-inefficiency, since due to truncation, 
+only approximately $\alpha$K samples will be used to compute the policy gradient.
+This is a shared disadvantage with the algorithm presented in
+\citet{Chow2014}.
+
+\section{Other distortion risk measures}\label{sec:other_risk_measures}
 
 In this section we present other interesting distortion risk measures $\phi$ that can be used
 to find policies optimizing other metrics rather than the CVaR.
@@ -35,34 +65,3 @@ for risk-averse (for $\eta<0$) or risk-seeking(for $\eta>0$) policies:
         \right.
     \quad \tau \sim U([0,1])
 \end{equation}
-
-\section{Other approach to compute CVaR}
-
-When changing the sampling distribution for $\tau$ to $U([0,\alpha])$
-to compute the CVaR of the
-distribution, we make use of both the dual formulation \ref{eq:dual_cvar} and Acerbi's
-integral formulas for CVaR.\ref{eq:cvar_defs_repeat}.\\
-A second approach would be to use the \citet{Rockafellar2000} optimization problem
-for CVaR presented in \ref{eq:rockafellar} and as a reminder:
-\begin{equation}
-    \text{CVaR}_\alpha (Z) = \underset{\nu} \max \big\{\nu + \frac{1}{\alpha} \mathbb E_Z[[Z- \nu]^-]\big\} \label{eq:rockafellar_repeat}
-\end{equation}
-
-which in the optimal point it holds that $\nu^*=\text{VaR}_\alpha(Z)$.\\
-Given the fact that our critic network estimates the $\text{VaR}_\alpha(Z)$ of the
-return distribution, we can compute the CVaR using \ref{eq:rockafellar_repeat}
-by sampling uniformly from  the whole quantile distribution, substracting the current
-estimated VaR for the confidence level  $\alpha$ and truncating the result, that is to say,
-we can compute CVaR via sampling by:
-\begin{align}
-    \text{CVaR}_\alpha(Z) \approx \nu + \frac{1}{\alpha} \frac{1}{K}
-\sum_{i=1}^K \big[ Z(x,a; \tau_i\vert \theta^Z) - \nu \big]^- 
-\end{align}
-
-where $\tau_i \sim U([0,1])$ and $\nu = Z(x,a; \alpha \vert \theta^Z)$.
-
-A disadvantage of such approach is sample-inefficiency, since due to truncation, 
-only approximately $\alpha$K samples will be used to compute the policy gradient.
-
-This is a shared disadvantage with the algorithm presented in
-\citet{Chow2014}. For the sake of comparison we present it in the next section.

@@ -1,4 +1,4 @@
-\section{Technical Details of the algorithm} \label{sec:technical_details}
+\section{Technical details of the algorithm} \label{sec:technical_details}
 The algorithm uses neural networks as non-linear function approximators for both the actor and the critic.
 To make effective use of large neural networks, we use insights fom the DeepDPG algorithm \cite{Lillicrap2016} and in its turn
 from Deep Q Network (DQN) \citep{Mnih2015}.
@@ -14,63 +14,101 @@ changes in the data distribution.
 correlations with the target.
 
 The agent perceives observations $(x_t,a_t,r_t,x_{t+1})$ when acting on the environment under behavior policy $\beta$ and stores them
-in a fixed-sized (we used size of $10^6$). When full, oldest samples are discarded.
+in a fixed-sized (we used size of $10^6$) buffer. When full, oldest samples are discarded.
 Since the algorithm is off-policy, the buffer can be large, allowing the algorithm to benefit from
 learning across a set of uncorrelated transitions.
-We address exploration by constructing an exploratory behavior policy $\beta$ by adding noise $\eta$ to the actor policy.
-
+We address exploration by constructing an exploratory behavior policy $\beta$ by adding noise $\eta$ to the actor policy $\pi$. We below
+explicitly write $\pi(x_t| \theta^\pi)$ to remark that we use same neural network parameterized by $\theta^Z$ to compute 
+the behavior actions.
 \begin{equation}
     \beta(x_t)=\pi(x_t| \theta^\pi) + \eta
 \end{equation}
 where $\eta$ is sampled from a noise process. In our case, as in \citet{Lillicrap2016},we
 used an Ornstein-Uhlenbeck process \citep{Uhlenbeck1930} with $\theta = 0.15$ and $\sigma=0.3$ with exponential decay.
 Ornstein-Uhlenbeck process models the velocity of a Brownian particle with friction, which results in temporally correlated
-values centered around the mean ($\mu$=0). \todo{explain more?}
+values centered around the mean ($\mu$=0).
 
 At every training step, we sample a minibatch of observations from the buffer.
-To estimate the target value for critic training, we use two target networks:  \textit{critic target network} and \textit{actor target network}
-($\hat{Z}(x,a;\tau | \theta^{\hat{Z}})$ and  $\hat{\pi}(x | \theta^{\hat{\pi}})$) which are initialized
-like their counterparts, but constrained to slowly track the learnt networks, so that to stabilize learning.
-With this goal, weights of target networks are updated ``softly", via:
+To estimate the target value for critic training, we use two target networks:  \textit{critic target network} $Z'(x,a;\tau)$ and \textit{actor target network}
+$\pi'(x)$ (parameterized by $\theta^{Z'}$ and $\theta^{\pi'}$ respectively) which are initialized
+like their counterparts, but constrained to slowly track the learnt networks so that to stabilize learning.
+With this goal, weights of target networks are updated ``softly" via:
 $\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
 
 Additionally, we use two insights from TD3 \citet{Fujimoto2018}.
 First, we update the policy and target networks less frequently than the critic network. As 
-\citet{Fujimoto2018} recommends we do one policy and target networks updates for every 
-two critic network updates. 
-
+\citet{Fujimoto2018} recommends, we do one policy and target network updates for every 
+two critic network updates. \\
 Second, we use target policy smoothing to address a particular failure mode that can happen
 in DeepDPG. To prevent policy to exploit 
 actions for which the critic overestimated its value, target policy smoothing adds noise to target actions
 to smooth out Q over similar actions. Specifically, the target actions used for the TD backup are:
 \begin{equation}
-    a_{t+1}=\hat{\pi}(x_{t+1} | \theta^{\hat{\pi}} + \text{clip}(\epsilon, -c, c) \quad \epsilon \sim \mathcal{N}(0,\sigma)
+    a_{t+1}=\pi'(x_{t+1}) + \text{clip}(\epsilon, -c, c) \quad \epsilon \sim \mathcal{N}(0,\sigma)
 \end{equation}
 where we experimentally set $c=0.5$ and $\sigma=0.2$ and $\mathcal{N}(0,\sigma)$ is a
-Gaussian distribution with mean=0 and standard deviation $\sigma$.
+Gaussian distribution with $\mu$=0 and standard deviation $\sigma$.
 
 To compute the quantile regression loss, we used N'=N=32 quantile levels to sample from
-target and critic networks. This parameter must be kept relatively big but further increasing
+target critic and critic networks. This parameter must be kept relatively big but further increasing
 it doesn't seem to improve performance.
 To compute the empirical CVaR from the estimated value distribution 
-$Z(x,a; \tau) | \theta^Z)$, we use K=8 quantile levels.
-
+$Z(x,a; \tau)$, we use K=8 quantile levels.
 
 We start training after a warm-up of T=25000 environment interactions. During this time, in order
-to enhance exploration, we don't use actor networks but random policies instead.
+to highly enhance exploration we don't use the behavior policy but a random policy instead.
+
 We use Adam optimizer for learning the neural networks parameters with learning rates of $10^{-4}$ and $10^{-3}$
 for the actor and the critic respectively.
+Algorithm pseudocode is provided below \ref{pseudocode:algo1}.
+\clearpage
+\begin{algorithm}[H] \label{pseudocode:algo1}
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \textbf{Input:} Replay buffer max size $\mathcal{B}$, quantile levels $N',N, K$, minibatch size $n$,
+    $\alpha$ confidence, $\eta$ exploration noise, $\{c, \epsilon, \sigma\}$ target policy smoothing parameters \;
+    
+    \textbf{Initialize:} Critic network $Z$ and actor network
+    $\Pi$ parameters and target networks $Z'\leftarrow Z$,
+    $\Pi' \leftarrow \Pi$ parameters\;
+    \While{t=1:T}{
+        \textcolor{mygray}{Collect data samples via environment interaction:}\;
+        \eIf{number batch data samples  $> \frac{B}{4}$}{
+            $a = \Pi(x) + \eta$\;
+            $x',r,done = \text{act}(a)$\;
+            $\text{buffer.add}(x,a,x',r,done)$\;
+            training=True\;
 
+        }
+        {$a = \text{random}$\;
+        $x',r,done = \text{act}(a)$\;
+        $\text{buffer.add}(x,a,x',r,done)$\;
+        training = False\;
 
-From a practical viewpoint, using stochastic policies requires integrating over both
-state and action spaces to compute the policy gradient, whereas the deterministic case
-only needs to integrate over the state space. Hence, stochastic policy gradients
-may require much more samples, especially if the action space has many dimensions.
-
-
-
-use replay buffer, target networks as DQN to deal with problems of Q-learning with functions approximators.
-
-Since distorted expectations can be expressed as weighted average over the quantiles \cite{Dhaene2012},
-we can use a specific sampling base distribution $\beta: [0,1] \ra [0,1]$
-to sample the quantile levels $\tau \in[0,1])$ from our critic network $Z(x,a; \tau)$.
+        }
+       
+    
+    \If(){training}{
+      Sample minibatch of $n$ transitions ($x_\mathcal{B},a_\mathcal{B},x'_\mathcal{B},r_\mathcal{B}$)
+      from the replay buffer $\mathcal{B}$\\
+      
+      \textcolor{mygray}{Train critic:}\;
+        $\tau_i, \tau'_j \sim U([0,1]) \quad 1\leq i,j \leq N,N'$\\
+        Compute next action a':\\
+        $a'=\Pi(x'_\mathcal{B}) + \text{clip}(\epsilon, -c, c) \quad \epsilon \sim \mathcal{N}(0,\sigma)$\;
+       
+        Compute distributional TD: $\delta_{ij}=r+ \gamma Z'(x'_\mathcal{B}, a';\tau'_j) - Z(x_\mathcal{B}, a_\mathcal{B};\tau_i) \; \forall i,j$\\
+        $\theta^Z \leftarrow \text{argmin}_{\theta_Z} \sum_{i=1}^{N}\mathbb E_{\tau'}[\rho_{\tau_i}(\delta_{ij})]$\;
+    
+      \textcolor{mygray}{Train actor:}\;
+        $\tau_k \sim U([0,\alpha]) \quad 1\leq k \leq K$\\
+        Compute $\text{CVaR}_\alpha=\frac{1}{\alpha K}\sum_{k=1}^K Z(x_\mathcal{B},a;\tau_k)$\\
+        $\theta^\Pi \leftarrow \text{argmax}_{\theta_\Pi} {CVaR}_\alpha$\;
+      \textcolor{mygray}{Update target networks:}\;
+        $\theta^{Z'}\leftarrow \tau\theta^Z + (1-\tau)\theta^{Z'} $;
+        $\theta^{\xi'}\leftarrow \tau\theta^\Pi + (1-\tau)\theta^{\Pi'} $\\
+    }
+    }
+    \label{pseudocode:algo1}
+    \caption{$\thename$}
+\end{algorithm}

@@ -1,12 +1,12 @@
-\chapter{Batch RL}
+\chapter{The $\thenameoff$ algorithm}
 \label{chapter:batchrl}
-
+\section{Batch RL}
 We decide to test the capabilities of our algorithm in a \textit{fully} off-policy setting, 
 also called \textit{batch RL setting} or \textit{offline RL}. In this setting, the agent 
 can only learn from a fixed dataset without further interaction with the environment.
 
 Most of RL algorithms provide a fundamentally \textit{online} learning paradigm which involves
-iteratively collecting experience by interacting with the environment, and then
+iteratively collecting experience by interacting with the environment and then
 using that experience to improve the policy. 
 In many  real-world scenarios, continuous interacting with the environment is impractical, either because 
 data collection is expensive, as in robotics or healthcare, or dangerous, for example a physical robot may
@@ -17,10 +17,10 @@ and effective generalization (e.g cooking in different kitchens or using differe
 requires large datasets \cite{levine2020}.
 
 
-The ``off-policy" algorithm we presented in previous sections, and similarly to most of the ``off-policy"
+The ``off-policy" algorithm we presented in previous sections and similarly to most of the ``off-policy"
 algorithms in literature, falls in the category of 
 off-policy \textit{``growing batch learning"}. In this case, agent's experience is appended to a data buffer 
-$\mathcal{D}$ and each new policy $\pi_k$ collects additional data, such that $\mathcal{D}$
+$\mathcal{B}$ and each new policy $\pi_k$ collects additional data, such that $\mathcal{B}$
 is composed of samples from $\pi_0,\pi_1...,\pi_k$ and all of this data is used to train an update new
 policy $\pi_{k+1}$. 
 %As a result, the training data tends to be heavily correlated to the current policy.
@@ -28,7 +28,7 @@ Hence, despite being off-policy these methods require active online data collect
 
 In contrast, in offline RL the agent no longer has ability to interact with the environment and collect
 additional transitions. Instead, it
-can only employ a static dataset $\mathcal{D}$ collected by an external agent using policy $\pi_\beta$
+can only employ a static dataset $\mathcal{B}$ collected by an external agent using policy $\pi_\beta$
 and must learn the best policy it can only using this dataset.
 
 In numerous real-world applications, such as games or robotics, there is already plentiful amounts 
@@ -40,25 +40,24 @@ decision-making engines, effectively allowing anyone with a large enough dataset
 into a policy than can optimize a desired utility criterion. \citep{levine2020}.
 
 
-\section{Issues with Batch RL} \todo{change title?}
+\section{Issues with Batch RL}
 
 Most of recent off-policy algorithms such as Soft Actor-Critic \citep{Haarnoja2018}, 
 DDPG \citep{Lillicrap2016} and Rainbow \citep{Hessel2018}  could be in principle used 
 as an offline RL algorithm, i.e. learn from data collected from an unknown behavioral policy
-$\pi_\beta$ with state visitation frequency $d^{\pi_\beta}(s)$. 
+$\pi_\beta$ with state visitation frequency $\rho^\beta(s)$. 
 However, in practice, they still require substantial amounts
-of “on-policy” data from the current behavioral policy in order to learn effectively, 
+of “on-policy” data from the current behavioral policy in order to learn effectively 
 and generally they fail to learn in the off-line setting.
 
-This is due to a fundamental problem of off-policy RL, called \textit{distributional shift}, which in 
+This is due to a fundamental problem of off-policy RL, called distributional shift, which in 
 its turn induces what's called extrapolation error \citep{Fujimoto2019} or bootstrapping error \citet{Kumar2019}.\\
-Distributional shift affects offline RL via dynamic programming algorithms (as ours, i.e. methods aiming
-to learn a state or state-action value function), both at test time and training time.
+Distributional shift affects offline RL via dynamic programming algorithms, both at test time and training time.
 State distribution shift affects test-time performance, but no training, since neither the policy nor
-the Q-function is ever evaluated at any state that was not sampled from $d^{\pi_\beta}$.\\
-However, training process is indeed affected by \textit{action distribution shift}.
+the Q-function is ever evaluated at any state that was not sampled from $\rho_\beta$.\\
+However, training process is indeed affected by action distribution shift.
 This is because when doing the Bellman backup to update the Q-function estimate,
-the \textit{target} values require evaluating the estimated $Q^\pi(x_{k+1},a_{k+1})$ where
+the target values require evaluating the estimated $Q^\pi(x_{k+1},a_{k+1})$ where
 a is chosen according to current policy $\pi$.
 Since targets are computed via bootstrapping, accuracy of Q-function regression depends
 on the estimate of the Q-value at these actions. When $\pi$ differs substantially from $\pi_\beta$, 
@@ -72,7 +71,7 @@ for which the learnt Q-function erroneously overestimates.
 This source of distribution shift is in fact one of the largest obstacles for practical application
 of dynamic programming methods to offline RL.
 
-It is important to notice that for on-policy settings, extrapolation error is generally something positive, since it
+It is important to notice that for on-policy settings, extrapolation error is generally something positive since it
 leads to a beneficial exploration. In this case, if the value function is overestimating the value at
 a (state-action) pair, the current policy will lead the agent to that pair and will observe that in fact
 it is not as good and hence, the value estimate will be corrected afterwards.
@@ -85,63 +84,26 @@ To address this OOD actions problems and effectively implement offline RL via dy
 \citet{Fujimoto2018} opted for constraining the trained policy distribution to lie close to
 the dataset policy distribution, to avoid erroneous Q-values due to extrapolation error.
 \citet{Kumar2019} suggested a less restrictive solution to constrain the learnt policy to lie
-\textit{within the support} of the dataset policy distribution.
+within the support of the dataset policy distribution.
 \todo{maybe cite more?}
 
 For our algorithm, we will inspire ourselves in the approach presented in 
 \citet{Fujimoto2019}, which we introduce below with its further modifications.
 
-
-\section{Our approach} \todo{more explicit title?}
-In \citet{Fujimoto2019}, they present a Batch-Constrained Deep Q-learning (BCQ)
-algorithm in which they
-train a generative model $G_w$ to generate actions with high similarity to the dataset.
-For the generative model they use a conditional variational auto-encoder (VAE) \cite{Kingma2014} which
+\section{Background on conditional variational autoencoders (VAE)}
+\citet{Fujimoto2019} presented a generative model $G_w$
+to generate actions with high similarity to the dataset.
+The generative model $G_w$ is modelled via a conditional variational autoencoder \cite{Kingma2014}.
+Given state-action pairs ($x^B_i,a^B_i$) from the dataset, the conditional variational autoencoder
 generates action samples as a reasonable approximation to
-$\underset{a}{\text{argmax}}  P _\mathcal{B}^G(a|x)$, where $P_\mathcal{B}^G(a|x)$ is 
+$\underset{a}{\text{argmax}}  P _\mathcal{B}^G(a_i|x_i)$, where $P_\mathcal{B}^G(a_i|x_i)$ is 
 the state-conditioned marginal likelihood given the (state-action) pairs in the 
 batch $\mathcal{B}$.
-\citet{Fujimoto2019} presents a Q-learning approach, for which
-they sample multiple candidate actions from the VAE, they perturbed them via a perturbation model
-and select the highest valued-action 
-according to a learnt Q-network.
-
-For our approach, we only use from \citet{Fujimoto2018} the VAE network to sample actions similar to
-the dataset, which are then perturbed to maximize the CVaR of the return distribution.
-The rest of the algorithm keeps intact as the one we presented, and as later summarized.
-
-We proceed to explain how we update our Distributional off-policy deterministic actor-critic algorithm previously
-presented to be able to learn effectively in the Batch RL setting.
-
-We generate actions using a  variational autoencoder $G_w$,
-which is trained to generate actions $\hat{a}$ with high  similarity  to  the  dataset.  
-Afterwards, we perturb $\hat{a}$  to generate actions $a$ that maximize the CVaR of the return
-distribution. This perturbation is done by a perturbation model  or actor network, $\xi$, which is trained in
-the same way as the previously presented actor network,
-i.e. to maximize the CVaR of the estimated return distribution via deterministic gradient ascent.
-
-\begin{align}
-    \hat{a_i} \sim G_w(x)\\
-    a_i =  \hat{a_i} + \xi(x,\hat{a_i};\phi,\theta^\xi)
-\end{align}
-
-where  $\xi(s,a;\phi)$ is a perturbation model that outputs an adjustment to action $\hat{a}$
-in the range $[-\phi,\phi]$. $\phi$ is a fixed parameter which determines how much imitation learning
-is used for the final actions. Low values of $\phi$ will reduce the perturbation and hence the 
-learnt policy will behave more closely to the behavior policy used to obtain the dataset.
-
-
-
-\subsection{Details of Conditional VAE}
-For the generative model $G_w$, we use a conditional variational autoencoder $G_w$.
-Given state-action pairs $x^B,a^B$ from the dataset, the conditional variational autoencoder
-aims to maximize the state-conditioned marginal log-likelihood  
+Specifically, given the state-condition action dataset $A|X = \{a_1|x_1,...,a_N|x_N\}$,
+a conditional VAE aims to maximize the state-conditioned marginal log-likelihood  
 $\log P_\mathcal{B}(A|X) = \sum_{i=1}^{N}\log  P_\mathcal{B}(a_i|x_i)$.
-Hence, using the trained generative model we can sample actions
-as a reasonable approximation to $ \arg \underset{a}\max P_\mathcal{B}^G(a|x)$, ie very similar to 
-the actions from the dataset.
 
-It is assumed that the data is generated by some random process, involving an unobserved continuous
+It is assumed that the data is generated by some random process involving an unobserved continuous
 random variable \textbf{z}.
 The process consists of two steps: (1) a value \textbf{$z_i$} is generated from some prior distribution p(z) and (2)
 an action $a_i$ is generated from some conditional distribution $p(a|z,x)$. 
@@ -158,16 +120,39 @@ Since computing the desired marginal $P_\mathcal{B}(A|X; \theta)$ is intractable
     &\log p(A|X; \theta) \geq \mathcal{L}(\theta, \phi; A|X) \\
     &\mathcal{L}(\theta, \phi; A|X)=\mathbb E_{q(z|A,X;\phi)} [\log p(A|z,X; \theta)] - D_{KL}(q(z|A,X;\phi)\; ||\;p(z; \theta)) \label{eq:vae_loss}
 \end{align}
+\section{The $\thenameoff$ algorithm}
+We introduce the Offline Distributional Deterministic Actor-Critic algorithm for
+CVaR optimization ($\thenameoff$), which is a fully offline variant of the $\thename$ algorithm able 
+to learn effectively in the Batch RL setting.
 
-\section{Batch RL Distributional DeterministicOff-policy Actor-critic algoritm for CVaR otpimization}
+We inspire ourselves on the BCQ algorithm presented in \citet{Fujimoto2019} to
+train a generative model $G_w$ to generate actions $\hat{a}$ with high similarity to the dataset.
+Afterwards, we perturb $\hat{a}$  to generate actions $a$ that maximize the CVaR of the return
+distribution. This perturbation is done by a perturbation model $\xi$, which is trained in
+the same way as the previously presented actor network for the $\thename$ algorithm,
+i.e. to maximize the CVaR of the estimated return distribution via deterministic gradient ascent.
+\begin{align}
+    \hat{a_i} \sim G_w(x)\\
+    a_i =  \hat{a_i} + \xi(x,\hat{a_i};\phi,\theta^\xi)
+\end{align}
+where  $\xi(s,a;\phi)$ is a perturbation (or actor) model that outputs an adjustment to action $\hat{a}$
+in the range $[-\phi,\phi]$. $\phi$ is a fixed parameter which determines how much imitation learning
+is used for the final actions. Low values of $\phi$ imply small perturbations and hence the 
+learnt policy will behave very similarly than the dataset policy, 
+whereas higher values of $\phi$ will generate policies that behave more differently than the
+dataset policy but with a higher influence to maximize the CVaR.
+A good trade-off is crucial for the good performance of the algorithm.
 
-For our implementation, the prior $p(z; \theta)$ is chosen to be a multivariate normal
-distribution $\mathcal{N}\big( 0,Id\big )$, hence it doesn't require parameters $\theta$.
-\todo{caption add name of alg}
+Figure \ref{fig:diagram} shows a graphical representation of the $\thenameoff$ algorithm with its 3 main parts:
+the generative model learning to generate actions similar to the ones in the dataset,
+the critic learning the value distribution and the actor learning the CVaR maximization policy
+by perturbing the actions generated by the generative model towards risk-sensitive ones.
+
+
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{images/diagram.pdf}
-    \caption{Graphical representation of the algorithm.
+    \caption{Graphical representation of the $\thenameoff$ algorithm.
     Algorithm is implemented fully off-policy using an external training dataset obtained
     for example, by a human expert or an on-policy RL algorithm.
     Algorithm consists in 3 main blocks: the \textit{VAE generative model}, the \textit{actor}
@@ -182,65 +167,70 @@ distribution $\mathcal{N}\big( 0,Id\big )$, hence it doesn't require parameters 
     \label{fig:diagram}
 
 \end{figure}
-For the probabilistic encoders and decoders we use neural networks.
-For the encoder $q(z|a,x;\phi)$ we used a neural network with  Gaussian output, specifically a 
-multivariate Gaussian with a diagonal covariance structure $\mathcal{N}(z | \mu(a,x;\phi), \sigma^2(a,x)Id ; \phi)$,
-where $\mu$ and $\sigma$ are the outputs of the neural network, i.e. nonlinear 
-functions of datapoint $(x_i,a_i)$ and $\phi$.
+\clearpage
+For our implementation, the prior $p(z; \theta)$ for the latent vector $z$ is chosen to be a multivariate normal
+distribution $\mathcal{N}\big( 0,Id\big )$, hence it doesn't require parameters $\theta$.
+For the probabilistic encoders $q(z|a,x;\phi)$ we used a 
+multivariate Gaussian with a diagonal covariance structure $\mathcal{N}(z | \mu(a,x;\phi), \sigma^2(a,x)Id)$,
+where $\mu$ and $\sigma$ are parameterized by training parameter $\phi$.
 To sample from the posterior $z_i \sim q(z|a,x; \phi)$ we use the reparameterization trick:
 \begin{equation}
     z_i = g(a_i,x_i, \epsilon; \phi)=\mu_i + \sigma_i \odot \epsilon \quad \epsilon \sim  \mathcal{N}(0,Id)
 \end{equation}
-where $\odot$ is the element-wise product.
-
-For the decoder $p(a|z,x; \theta)$ we used another neural network with deterministic output, i.e. nonlinear function of 
-datapoint $(x_i,z_i)$ and $\theta$.
+where $\odot$ is the element-wise product.\\
+For the decoder $p(a|z,x; \theta)$ we used a nonlinear deterministic function parameterized by $\theta$.
 
 When training the VAE, both recognition model parameters $\phi$ and the generative model parameters $\theta$ are
 learnt jointly to maximize the variational lower bound $\mathcal{L}(\theta, \phi; X)$ in \ref{eq:vae_loss} 
 via gradient ascent, i.e. maximize expected reconstruction loss and a KL-divergence term
-according to the distribution of the latent vector z.
-
+according to the distribution of the latent vector z.\\
 When both prior and posterior are Gaussian, KL-divergence can be computed analytically:
 \begin{equation}
     D_{KL}(q(z|X;\phi)\; ||\;p(z; \theta)) = -\frac{1}{2}\sum_{j=1}^J (1+\log((\sigma_j)^2)-(\mu_j)^2-(\sigma_j)^2) \label{eq:kl_div}
 \end{equation}
-
 where J is the dimensionality of z, and $\mu_j,\sigma_j$ represent the j-th element of the vectors.\\
 The expected reconstruction error 
 $\mathbb E_{q(z|X;\phi)} [\log p(X|z; \theta)]$
 requires estimation by sampling. We use the mean-squared error between the action $a_\mathcal{B}$
-from the dataset and the reconstructed action.
+from the dataset and the reconstructed action $\hat{a}$.
 
 Finally, when generating actions during evaluation or deployment, random values of z are sampled from a
 multivariate normal and passed through the decoder to produce the actions.
+However, during deployment the stochasticity of the policy due to sampling the latent vector z from 
+$z \sim \mathcal{N}(0,Id)$ can be removed by setting $\sigma=0$.
 
+Actor and critic are trained in the same way as for the $\thename$ algorithm.
+The unique modification is that now the actor network has also as an input the
+action $\hat{a}$ generated by the generative model. For the sake of clarification it is trained by:
 
-
-The perturbation model is trained as in \ref{eq:alg2}:
 \begin{align}
-    \nabla_{\theta^\xi} J_\beta(\xi | \theta^\xi) &\approx \mathbb E_{x \sim \rho^\beta} 
-\big [\nabla_{\theta^\xi} \xi(x,\hat{a}| \theta^\xi) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
-\sum_{i=1}^K Z(x,a; \tau_i) | \theta^Z)]|_{a=\xi(x,\hat{a}| \theta^\xi)}  \big] \label{eq:algbatchrl_2}
+    \nabla_{\theta^\xi} J_\mathcal{B}(\xi) &\approx \mathbb E_{x \sim \rho^\mathcal{B}} 
+\big [\nabla_{\theta^\xi} \xi(x,\hat{a}) \nabla_a  [\frac{1}{\alpha} \frac{1}{K}
+\sum_{i=1}^K Z(x,a; \tau_i)]|_{a=\xi(x,\hat{a})}  \big] \label{eq:algbatchrl_2}
 \end{align}
 
-Figure \ref{fig:diagram} shows a graphical representation of the algorithm with its 3 main parts:
-the generative model learning to generate actions similar to the ones in the dataset,
-the critic learning the value distribution and the actor learning the CVaR maximization policy
-by perturbing the actions generated by the generative model towards risk-sensitive ones.
 
 
-\section{Technical details}
-Algorithm works very similarly to the off-policy RL previously presented, and hence shares almost all details
-as the ones introduced in \ref{sec:technical_details}.
-We focus here on the differences or new additions.
-For batch RL, we do not need to account for exploration so there is no such behavior policy.
-At every training-step a minibatch of observations  $(x_t^B,a_t^B,r_t^B,x_{t+1}^B)$ is sampled from
-static dataset.
 
+Detailed information is provided in next section as well a pseudocode in \ref{pseudocode:algo2}.
+
+
+\section{Technical details of the algorithm}
+Algorithm works very similarly to the $\thename$ algorithm and hence almost all details are already
+described in section \ref{sec:technical_details}.
+Specifically, the critic is left untouched whereas the actor has some minor modifications which we will
+address below.
+With respect to the VAE, we use neural networks for both the probabilistic encoder and decoder.
+For the encoder $q(z|a,x;\phi)$ we use a neural network with a multivariate Gaussian output
+where $\mu$ and $\sigma$ are the outputs of a neural network, i.e. nonlinear 
+functions of datapoint $(x_i,a_i)$ and $\phi$.
+For the decoder $p(a|z,x; \theta)$ we use another neural network with deterministic output, i.e. nonlinear function of 
+datapoint $(x_i,z_i)$ and $\theta$.
+
+At every training-step a minibatch of observations  $(x_t^B,a_t^B,r_t^B,x_{t+1}^B)$ is sampled from the
+static dataset $\mathcal{B}$.
 Given $x_{k}^B,a_{k}^B$ from the dataset and the generative model $G_w$ with its encoding $E_w$ and decoding $D_w$
-we sample actions $hat{a}_k^{VAE}$ from the conditional VAE by:
-
+parts, we sample actions $\hat{a}_k^{VAE}$ from the conditional VAE by:
 \begin{align}
     \mu, \sigma, z = E_w(x_{k}^B,a_{k}^B) \quad \text{where} \; z=\mu + \sigma \mathcal{N}(0,Id)\\
     \hat{a}_k^{VAE} = D_w(x_{k}^B, z)
@@ -251,22 +241,21 @@ Then we train jointly $[E_w,D_w]$ via gradient descent:
 \end{align}
 where $D_{KL}$ is computed as in \ref{eq:kl_div} using $\sigma,\mu$ from the outputs of the encoder.
 
-Actor or \textit{perturbation model} training is done by gradient ascent as in \ref{eq:algbatchrl_2}
-where 
+With respect to the actor networks, we first remark that for batch RL, we do not need to account for exploration 
+so there is no such behavior policy network.\\
+Actor or \textit{perturbation model} $\xi$ training is trained as in \ref{eq:algbatchrl_2} where:
 \begin{equation}
     \hat{a} = D_w(x^B, z_{CLIP}) \quad z_{CLIP} = \text{clip}(z, -0.5,0.5) \;z \sim \mathcal{N}(0,Id)
 \end{equation}
 
-We train the critic in the same way as the original algorithm,
-using a critic target network to estimate the target values 
-which slowly tracks the learnt networks.
-$a_{k+1}$ actions used to compute target Z values $Z(x_{k+1}^B,a_{k+1}; \tau_i)$,
-are computed as the output of the perturbation model $\epsilon$, which also uses a target network.
+With respect to the critic network,  we train it in the same way as for the $\thename$ algorithm.
+We also use target networks for the Bellman backup for both the critic and the actor $\xi$
+which are initialized
+like their counterparts, but constrained to slowly track the current networks so that to stabilize learning.
+With this goal, weights $\theta'$ of target networks are updated ``softly" via:
+$\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
 
-During deployment, the stochasticity of the policy due to sampling the latent vector z from 
-$z \sim \mathcal{N}(0,Id)$ can be removed by setting $\sigma=0$.
-
-
+\clearpage
 
 \begin{algorithm}[H]
     \DontPrintSemicolon
@@ -306,4 +295,3 @@ $z \sim \mathcal{N}(0,Id)$ can be removed by setting $\sigma=0$.
     \label{pseudocode:algo2}
     \caption{$\thenameoff$}
 \end{algorithm}
-    

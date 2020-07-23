@@ -32,7 +32,7 @@ At every training step, we sample a minibatch of observations from the buffer.
 To estimate the target value for critic training, we use two target networks:  \textit{critic target network} $Z'(x,a;\tau)$ and \textit{actor target network}
 $\pi'(x)$ (parameterized by $\theta^{Z'}$ and $\theta^{\pi'}$ respectively) which are initialized
 like their counterparts, but constrained to slowly track the learnt networks so that to stabilize learning.
-With this goal, weights of target networks are updated ``softly" via:
+With this goal, weights of target networks $\theta'$ are updated ``softly" via:
 $\theta' \leftarrow (1-\tau)\theta' + \tau\theta \; \text{where} \; \tau \in [0,1], \tau \lll 1$.
 
 Additionally, we use two insights from TD3 \citet{Fujimoto2018}.
@@ -40,7 +40,7 @@ First, we update the policy and target networks less frequently than the critic 
 \citet{Fujimoto2018} recommends, we do one policy and target network updates for every 
 two critic network updates. \\
 Second, we use target policy smoothing to address a particular failure mode that can happen
-in DeepDPG. To prevent policy to exploit 
+in DDPG \citep{Lillicrap2016}. To prevent policy to exploit 
 actions for which the critic overestimated its value, target policy smoothing adds noise to target actions
 to smooth out Q over similar actions. Specifically, the target actions used for the TD backup are:
 \begin{equation}

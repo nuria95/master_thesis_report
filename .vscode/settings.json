@@ -7,5 +7,9 @@
         "mdps",
         "minibatch",
         "stochasticity"
+    ],
+    "cSpell.ignoreWords": [
+        "mygray",
+        "textcolor"
     ]
 }

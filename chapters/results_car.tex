@@ -61,7 +61,7 @@ Hence the final cumulative reward $G_T= (24-1) R_{k} + R_{F}=140$.
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/Trajectory_nopenal.pdf}
         \caption{States and control evolution during evaluation without velocity penalization. 
          Learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
-        \label{traj1_nopenal}
+        \label{fig:traj1_nopenal}
     
 \end{figure}
 
@@ -90,7 +90,7 @@ $G_T= (24-1)R_{k} + (21-1)R_{v} + R_{F} << (10+21-1) R_{k} + R_{F}=70$
         \caption{States and control evolution during evaluation with velocity penalization
         with probability 1.
         Learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
-        \label{traj1_penal1}
+        \label{fig:traj1_penal1}
     
 \end{figure}
 
@@ -127,7 +127,7 @@ Results are shown below.
         Every datapoint corresponds
         to one evaluation process performed every 10 training episodes. For the plot we
         show averaged values over 5 random seeds and 1 std}
-        \label{maxveltimes_car}
+        \label{fig:maxveltimes_car}
     
 \end{figure}
 
@@ -139,7 +139,7 @@ Results are shown below.
         to one evaluation process performed every 10 training episodes.
         For the plot we
         show averaged values over 5 random seeds and 1 std}
-        \label{cvar_car}
+        \label{fig:cvar_car}
     
 \end{figure}
 
@@ -150,7 +150,7 @@ Results are shown below.
         Every datapoint corresponds
         to one evaluation process performed every 10 training episodes.For the plot we
         show averaged values over 5 random seeds and 1 std}
-        \label{mean_car}
+        \label{fig:mean_car}
     
 \end{figure}
 
@@ -161,7 +161,7 @@ Results are shown below.
         with probability 0.2.
         Learnt policies by \textit{Mean} and \textit{CVaR} differ, \textit{CVaR} leading
         towards risk-averse behavior}
-        \label{traj_probpenal0.2}
+        \label{fig:traj_probpenal0.2}
     
 \end{figure}
 
@@ -178,7 +178,7 @@ Results are shown below.
         Distribution of rewards for \textit{Mean} follows a binomial distribution B(n,p)
         with n being the number of steps with a velocity higher than the penalized and 
         p the probability of penalization.}
-        \label{histogram_cvar_vs_mean}
+        \label{fig:histogram_cvar_vs_mean}
     
 \end{figure}
 

@@ -58,8 +58,8 @@ $Z(x,a; \tau)$, we use K=8 quantile levels.
 We start training after a warm-up of T=25000 environment interactions. During this time, in order
 to highly enhance exploration we don't use the behavior policy but a random policy instead.
 
-We use Adam optimizer for learning the neural networks parameters with learning rates of $10^{-4}$ and $10^{-3}$
-for the actor and the critic respectively.
+The actor and critic network parameters are updated using stochastic gradient ascent and descent, with learning rates of $10^{-4}$ and $10^{-3}$
+for the actor and the critic, respectively, and adjusted online using Adam optimizer \citep{Kingma2015}.
 Algorithm pseudocode is provided below \ref{pseudocode:algo1}.
 \clearpage
 \begin{algorithm}[H] \label{pseudocode:algo1}

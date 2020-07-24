@@ -1,4 +1,26 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-To be written
+Risk-sensitive decision-making provides a promising
+approach to compute robust and safe policies, essential in safety-critical applications
+such as healthcare or autonomous navigation.
+To this end, we present $\thename$ (Distributional Deterministic Actor-Critic approach for 
+CVaR optimization), a model-free off-policy algorithm to find risk-sensitive policies
+that maximize the conditional Value-at-Risk (CVaR) of the return distribution.
+Adapting the distributional perspective on reinforcement learning to the continuous control setting,
+the critic learns a parameterization of the full action-value distribution
+instead of the traditional expected value. In its turn, the actor is updated towards maximizing 
+the CVaR of such distribution.\\
+More remarkably, we also present a fully offline variant, $\thenameoff$ algorithm,
+which can learn risk-sensitive policies in a fully offline setting.
+We demonstrate the effectiveness of $\thenameoff$ in the domain of simulated robotics.
+Only making use of an external dataset, $\thenameoff$ can learn risk-sensitive policies
+for several robotic environments that empirically reduce the probability of 
+catastrophic events.
+This property holds tremendous promise for making possible to effectively allowing to turn
+any large enough dataset into a risk-sensitive policy
+without the need of exposing the agent 
+to the risky environment during the training process.
+Additionally, we consider the algorithm can serve as a base for future algorithms that not
+only scale to real-world problems, but will also lead to solutions that generalize substantially better.
+We believe $\thenameoff$ looks promising for advancing in the safe and generalizable data-driven RL area. 

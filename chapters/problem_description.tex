@@ -133,19 +133,10 @@ return distribution i.e.:
 
 To this end we present $\thename$ and $\thenameoff$, two algorithms for CVaR optimization
 using a \textit{distributional} variant 
-of the deterministic policy gradient algorithm.
-The word \textit{distributional} emphasizes that our approach takes inspiration from the
-recent advances in distributional RL 
-\citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
-\textit{value distribution} (i.e. the distribution of the random return received by a RL agent).
-We compute the CVaR of the distribution under current policy
-by sampling from the estimated value distribution and we update the current policy
-towards maximizing it via stochastic gradient ascent.\\
+of the deterministic policy gradient algorithm.\\
 The CVaR dual formulation and the Acerbi's integral formula \ref{eq:cvar_defs} presented above,
 will be useful to derive our approach to compute the CVaR 
 from parameterized inverse cumulative distributions.\\
-$\thenameoff$ builds upon $\thename$ and introduces an action generative model to provide the algorithm
-with the capability to be implemented fully offline by learning without interacting with the environment.
 
 \begin{figure}[ht]
     \centering

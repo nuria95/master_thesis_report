@@ -1,19 +1,29 @@
 \chapter{The $\thename$ algorithm}
 \label{chapter:algo}
 
-We introduce the Distributional Deterministic Actor-Critic algorithm for
-CVaR optimization ($\thename$), an off-policy, model-free algorithm for CVaR optimization using deep function approximators
+We introduce the $\thename$ algorithm (Distributional Deterministic Actor-Critic algorithm for
+CVaR optimization), an off-policy, model-free algorithm for CVaR optimization using deep function approximators
 that can learn policies in high-dimensional, continuous action spaces.\\
-Our work is based on the deterministic policy gradient algorithm.
-Specifically, we use an actor-critic approach: the critic uses a distributional variant
-of RL and it is trained to estimate the whole value distribution, whereas the actor
-is trained via gradient ascent to maximize the CVaR of this distribution.\\ 
+The word \textit{distributional} emphasizes that our approach takes inspiration from the
+recent advances in distributional RL 
+\citep{Bellemare2017,Dabney2018a,Dabney2018b} to estimate the full
+\textit{action-value distribution}.\\
+Additionally, we build upon DDPG \citep{Lillicrap2016}, a popular off-policy actor-critic 
+using deep RL method for continuous control.
+
+Specifically, our critic uses the distributional variant
+of RL and it is trained to learn a parameterization of the action-value distribution under current policy.
+Our actor maximizes the CVaR of this distribution
+by sampling from the parameterized value distribution to compute the CVaR and
+being updated using a variant of the
+deterministic policy gradient algorithm.
+
 In \ref{sec:DPG} we briefly describe the standard DPG algorithm and its variants,
 then in \ref{sec:distr_ddpg} we introduce
-our $\thename$ algorithm and how we use it to obtain risk-sensitive policies,
+the $\thename$ algorithm and how we use it to obtain risk-sensitive policies,
 in \ref{sec:technical_details} we focus on implementation details of the algorithm and we provide
 a pseudocode \ref{pseudocode:algo1} and in \ref{sec:other_cvar_computations} and \ref{sec:other_risk_measures} we present
-other alternatives for computing CVaR and other possible risk metrics that could be used without varying
+other alternatives for computing CVaR and other possible risk metrics that could be optimized without varying
 the algorithm.
 Extensive and more theoretical information on the distributional RL approach is addressed in 
 appendix \ref{chap:appendix_distRL}.
@@ -118,10 +128,10 @@ given by \cite{Degris2012} that argues that this is a good approximation since i
 preserve the set of local optima to which gradient ascent converges.
 
 \section{The $\thename$ algorithm} \label{sec:distr_ddpg}
-We present the $\thename$ algorithm, which is one of the main contribution of this thesis.
+We present the $\thename$ algorithm, which is one of the main contributions of this thesis.
 The algorithm is based on the original off-policy deterministic actor critic explained
 in previous subsection \ref{subsec:offpolicy_actor_critic}, but introduces a distributional
-critic, which estimates the whole value distribution instead of only its expected value.
+critic which estimates the whole value distribution instead of only its expected value.
 With this extra information, the actor can learn to maximize other metrics than the expected value,
 specifically the CVaR.
 We proceed to present the components of the algorithm.

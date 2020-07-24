@@ -27,9 +27,9 @@ makes the environment stochastic enough to have a meaningful assessment of risk 
 tail performance.
 If the velocity of the agent is greater than 4, a reward of $R_v=-100$ is given with probability 0.05 
 Due to the fact that there is no direct access to the velocity of the cheetah from the observations,
-we reran the environment interactions from the dataset in an oopen-loop way to collect the desired information and 
+we reran the environment interactions from the dataset in an open-loop way to collect the desired information and 
 modify the rewards accordingly.
-The modified dataset was used to train the algorithm in an off-line way.
+The modified dataset was used to train the algorithm in an offline way.
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
@@ -59,7 +59,7 @@ Results are shown below.
         \caption{CVaR$_\alpha=0.1$ of the cumulative rewards over 5 evaluation episodes.
         Every point corresponds to one evaluation process performed every 1000 steps of training.For the plot we
         show averaged values over 5 random seeds and 1 std}
-        \label{cvar_cheetah}
+        \label{fig:cvar_cheetah}
     
 \end{figure}
 
@@ -69,7 +69,7 @@ Results are shown below.
     \caption{Mean of the cumulative rewards over 5 evaluation episodes. Every point corresponds
     to one evaluation process performed every 1000 steps of training.For the plot we
     show averaged values over 5 random seeds and 1 std}
-    \label{mean_cheetah}
+    \label{fig:mean_cheetah}
 
 \end{figure}
 
@@ -81,7 +81,7 @@ Results are shown below.
     \caption{Mean of number of times the maximum velocity was exceeded over 5 evaluation episodes.
     Every point corresponds to one evaluation process performed every 1000 steps of training.
     For the plot we show averaged values over 5 random seeds and 1 std}
-    \label{vel_exceed_cheetah}
+    \label{fig:vel_exceed_cheetah}
 
 \end{figure}
 
@@ -93,7 +93,7 @@ Results are shown below.
     \textit{Mean} achieves an expected value  ($\mu=220.75)$  but 
     has a far lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=-131.77) compared to
     \textit{CVaR} ($\mu=238.18$ and $\text{CVaR}_{\alpha= 0.1}$=130.63)}
-    \label{hist_cum_rewards200steps_cheetah}
+    \label{fig:hist_cum_rewards200steps_cheetah}
 \end{figure}
 
 \clearpage
@@ -125,7 +125,7 @@ A reward of $R_H=-100$ is given with probability 0.1, if the walker exits the \t
 Due to the fact that there is no direct access to the required information from the observations,
 we reran the environment interactions from the dataset in open-loop, to collect the desired information and 
 modify the rewards accordingly.
-The modified dataset was used to train the algorithm in an off-line way.
+The modified dataset was used to train the algorithm in an offline way.
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
@@ -145,7 +145,7 @@ Results are shown below.
     \caption{CVaR$_\alpha=0.1$ of the cumulative rewards over 5 evaluation episodes.
     Every point corresponds to one evaluation process performed every 1000 steps of training.For the plot we
     show averaged values over 10 random seeds and 1 std}
-    \label{cvar_walker}
+    \label{fig:cvar_walker}
 
 \end{figure}
 
@@ -155,7 +155,7 @@ Results are shown below.
 \caption{Mean of the cumulative rewards over 5 evaluation episodes. Every point corresponds
 to one evaluation process performed every 1000 steps of training.For the plot we
 show averaged values over 10 random seeds and 1 std}
-\label{mean_walker}
+\label{fig:mean_walker}
 
 \end{figure}
 
@@ -169,7 +169,7 @@ over 500 evaluation episodes of 1000 time steps each using the trained final pol
 \textit{Mean} achieves a slightly lower expected value ($\mu=2739.47)$ but 
 has a lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=67.54) compared to
 \textit{CVaR} ($\mu=2922.56$ and $\text{CVaR}_{\alpha= 0.1}$=235.74)}
-\label{hist_cum_rewards_walker}
+\label{fig:hist_cum_rewards_walker}
 \end{figure}
 
 \clearpage

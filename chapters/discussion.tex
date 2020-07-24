@@ -1,7 +1,7 @@
 \chapter{Discussion}
 \label{sec:discussion}
 
-In this thesis we proposed $\thename$, a novel actor-critic framework to learn
+In this thesis we proposed $\thename$ and $\thenameoff$ , two novel actor-critic frameworks to learn
 risk-sensitive policies by maximizing CVaR.
 The algorithm can be implemented fully off-policy, hence it can learn from a fixed dataset without
 further interaction with the environment, which is crucial for tasks where
@@ -10,7 +10,12 @@ when it is risky.
 
 By using a distributional RL approach to learn the full value distribution, our algorithm has the
 ability to learn policies with different level of risk-aversity depending on the 
-confidence level selected.\\
+confidence level selected.
+Additionally, the fact of being able to switch the objective function just by changing the sampling distribution
+for $\tau$ gives to the algorithm a lot of versatility.
+Algorithms that directly derive policies for CVaR optimization \citep{Chow2014,Tamar2015a}
+don't show such property.
+In the future, we could explore the range of policies that we can learn by playing with the sampling distribution.
 We tested performance in several environments and showed difference in learnt policies
 depending on the chosen confidence level, ones maximizing the mean of the return 
 to the detriment of rare 
@@ -29,5 +34,5 @@ catastrophic events prevention is crucial.
 Due to the appeal of offline RL which enables data to be turned into generalizable
 decisions making engines, and risk of learnt actions being one of main concerns in current RL
 approaches,
-we believe $\thename$, an offline RL approach accounting for risk,
+we believe $\thenameoff$, an offline RL approach accounting for risk,
 looks promising for advancing in the safe and generalizable data-driven RL area. 

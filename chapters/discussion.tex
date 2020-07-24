@@ -1,9 +1,9 @@
 \chapter{Discussion}
 \label{sec:discussion}
 
-In this thesis we proposed $\thename$ and $\thenameoff$ , two novel actor-critic frameworks to learn
+In this thesis we presented $\thename$ and $\thenameoff$ , two novel actor-critic frameworks to learn
 risk-sensitive policies by maximizing CVaR.
-The algorithm can be implemented fully off-policy, hence it can learn from a fixed dataset without
+$\thenameoff$ algorithm can be implemented fully off-policy, hence it can learn from a fixed dataset without
 further interaction with the environment, which is crucial for tasks where
 the data collection procedure is costly, time-consuming and, most importantly for our goal,
 when it is risky.
@@ -16,6 +16,7 @@ for $\tau$ gives to the algorithm a lot of versatility.
 Algorithms that directly derive policies for CVaR optimization \citep{Chow2014,Tamar2015a}
 don't show such property.
 In the future, we could explore the range of policies that we can learn by playing with the sampling distribution.
+
 We tested performance in several environments and showed difference in learnt policies
 depending on the chosen confidence level, ones maximizing the mean of the return 
 to the detriment of rare 
@@ -31,8 +32,11 @@ Additionally, we could test the algorithm in other environments such as for
 autonomous navigation or healthcare applications where a lot of offline data is available and where
 catastrophic events prevention is crucial.
 
-Due to the appeal of offline RL which enables data to be turned into generalizable
-decisions making engines, and risk of learnt actions being one of main concerns in current RL
-approaches,
-we believe $\thenameoff$, an offline RL approach accounting for risk,
-looks promising for advancing in the safe and generalizable data-driven RL area. 
+
+Offline capabilities of $\thenameoff$ holds tremendous promise for making possible to effectively allowing to turn
+any large enough dataset into a risk-sensitive policy
+without the need of exposing the agent 
+to the risky environment during the training process.
+Additionally, we consider the algorithm can serve as a base for future algorithms that not
+only scale to real-world problems, but will also lead to solutions that generalize substantially better.
+We believe $\thenameoff$ looks promising for advancing in the safe and generalizable data-driven RL area. 

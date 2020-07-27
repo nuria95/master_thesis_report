@@ -6,7 +6,7 @@ across a variety of continuous
 control tasks.
 First, we show $\thename$ performance in an off-policy setting on a toy example.
 Then, we move to the fully off-policy setting, i.e. batch RL setting, and we test $\thenameoff$ performance
-on several external datasets provided by the D4RL suite \citep{d4rl}.
+on several external D4RL datasets, a recent suite of tasks and datasets for benchmarking progress in offline RL. \citep{d4rl}.
 In all the results we compare the policies learnt when maximizing for the expected value
 (i.e. sampling $\tau \sim U([0,1])$,
 from now on \textit{Mean})
@@ -108,10 +108,19 @@ In the following we show the evaluation during training for both \textit{Mean} a
 Specifically, every 10 training episodes, we test the current policy over 500 evaluation episodes.
 During evaluation, we remove the exploration noise from the policy.
 During this 500 evaluation episodes, we compute the mean of the cumulative rewards (see Figure \ref{fig:mean_car}),
-the CVaR with a confidence level of 0.1  (see Figure \ref{fig:cvar_car}) and also the mean of the number of times the 
-maximum velocity is exceeded  (see Figure \ref{fig:maxveltimes_car}). 
+the CVaR with a confidence level of 0.1  (see Figure \ref{fig:cvar_car}) and also the mean of the number of time steps
+driving over the
+speed limit (see Figure \ref{fig:maxveltimes_car}). \\
+We can see how \textit{Mean} converges to slightly higher
+expected value but lower CVaR than \textit{CVaR} and that it leads to driving over the speed limit for 
+a long amount of time while \textit{CVaR} learns
+in the very early stages of learning not to exceed it.\\
+The Figures also show that \textit{Mean} takes longer to converge than \textit{CVaR}, with a very high standard deviation
+until the very end due to some episodes in the evaluation process for which the car doesn't reach the goal and keeps accumulating
+$R_{k}$ penalizations. This suggests that in some scenarios the fact of reducing high penalization outcomes,
+even though they occur with very low probability, might reduce training time.
 
-After training, we used the final policies and deployed them in the 
+After training we used the final policies and deployed them in the 
 environment. Obtained trajectories are shown in Figure \ref{fig:traj_probpenal0.2}.
 A histogram of the resulting cumulative rewards shows
 how the \textit{Mean} algorithm obtains, in average, higher cumulative rewards, but in some scenarios it 

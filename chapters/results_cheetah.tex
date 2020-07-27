@@ -1,26 +1,24 @@
 
 \section{Batch RL Setting}
-We test the performance of our algorithm in a Batch RL setting.
-To this end, we make use the D4RL dataset \cite{d4rl}, a recent suite of tasks and datasets for
-benchmarking progress in offline RL.
-We consider evaluating performance on a number of physical control tasks by utilizing
-a suite of benchmark tasks of Gym toolkit developed in the MuJoCo
+We test the performance of the $\thenameoff$ algorithm in a Batch RL setting.
+To this end, we make use of the D4RL datasets, specifically those  datasets from D4RL
+generated
+on a number of physical control tasks from the Gym toolkit developed under MuJoCo
 physics simulator \citep{Todorov2012}.
 
 \subsection{Half-Cheetah}
 We show results on the \textit{HalfCheetah} task.
 In the \textit{HalfCheetah} environment, a 2D cheetah robot needs to learn to run.
-The observation space has 17 dimensions (accounting for velocity and position of the joints)
+The observation space has 17 dimensions, accounting for velocity and position of the joints.
 The control space has a dimensionality of 6, constrained between -1 and 1, 
 controlling the torques applied to the joints.
-The reward received per step is a function of the control cost and the velocity of the agent
+The reward received every time step is a function of the control cost and the velocity of the agent.
 
-\subsubsection{Dataset}
+\textbf{Dataset}\\
 We use the \textit{halfcheetah-medium-v0} dataset from D4RL. This dataset consists of 1M samples 
 of data collected by using a partially trained policy. Specifically, they train a policy
 using a standard online RL algorithm (soft actor-critic) until it reaches 
-approximately 1/3 the performance of the expert.
-
+approximately 1/3 the performance of the expert.\\
 The environment is deterministic, so to proof the performance of our algorithm, we modify the environment to
 add a source of uncertainty. We introduce stochasticity in the original cost function in a way that 
 makes the environment stochastic enough to have a meaningful assessment of risk in terms of 
@@ -30,57 +28,59 @@ Due to the fact that there is no direct access to the velocity of the cheetah fr
 we reran the environment interactions from the dataset in an open-loop way to collect the desired information and 
 modify the rewards accordingly.
 The modified dataset was used to train the algorithm in an offline way.
+Only for the evaluation process, we allowed the agent to interact with the environment.
+We use the $\textit{HalfCheetah-v3}$ environment provided by the OpenAI Gym Toolkit, but modified with a 
+\textit{RewardWrapper} to change the default reward function.\\
+
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
-Specifically, every 1000 training steps, we evaluate the current policy for 5 episodes.
-Only for this evaluation process, we allow the agent to interact with the environment.
-During evaluation, the environment is modified with a RewardWrapper to modify
-the reward function.
-During evaluation, to ensure the deterministic nature of the policy, 
-the latent vector is not sampled from a gaussian, but a vector of zeros is used instead.
-During this 5 evaluation episodes, we track the mean of the cumulative rewards,
-the CVaR with a confidence level of 0.1 and also the mean of the number of times the 
-maximum velocity is exceeded.
+Specifically, every 1000 training steps we evaluate the current policy for 5 episodes.
+During evaluation, to ensure the deterministic nature of the policy
+the latent vector $z$ is not sampled from a Gaussian, but a vector of zeros is used instead.
+During this 5 evaluation episodes, we track the mean of the cumulative rewards (see Figure \ref{fig:mean_cheetah}),
+the CVaR with a confidence level of 0.1 (see Figure \ref{fig:cvar_cheetah}) and also the 
+mean of number of time steps running over the speed limit (see Figure \ref{fig:vel_exceed_cheetah}).\\
+We can see how \textit{Mean} converges to slightly higher
+expected value but far lower CVaR than \textit{CVaR} and that it leads to running over the speed limit for 
+a long amount of time while \textit{CVaR} learns
+in the very early stages of learning not to exceed it.
 
-After training, we used the final policy and deployed it in the noisy environment for 20 episodes 
-200 time steps each. An histogram of the resulting cumulative rewards is added below showing
-how the \textit{Mean} algorithm obtain in average higher rewards, but in some scenarios it 
+After training, we used the final policies and deployed them in the noisy environment for 500 episodes 
+200 time steps each. A histogram of the resulting cumulative rewards shows
+how the \textit{Mean} algorithm obtains, in average, higher rewards, but in some scenarios it 
 obtains really low results, whereas the \textit{CVaR} performs in average worse than \textit{Mean} 
-but the conditional value at risk is higher than for the \textit{Mean}.
-Results are shown below.
+but the conditional value at risk is higher than for the \textit{Mean} (see Figure \ref{fig:hist_cum_rewards200steps_cheetah}).
 
 
-
-
-\begin{figure}[ht]
-        \centering
-        \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/cvar_train_withstds.pdf}
-        \caption{CVaR$_\alpha=0.1$ of the cumulative rewards over 5 evaluation episodes.
-        Every point corresponds to one evaluation process performed every 1000 steps of training.For the plot we
-        show averaged values over 5 random seeds and 1 std}
-        \label{fig:cvar_cheetah}
-    
-\end{figure}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/mean_train_withstds.pdf}
-    \caption{Mean of the cumulative rewards over 5 evaluation episodes. Every point corresponds
+    \caption{Evolution during training of mean of the cumulative rewards over 5 evaluation episodes. Every point corresponds
     to one evaluation process performed every 1000 steps of training.For the plot we
-    show averaged values over 5 random seeds and 1 std}
+    show averaged values over 5 random seeds and 1 standard deviation}
     \label{fig:mean_cheetah}
 
 \end{figure}
 
+\begin{figure}[ht]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/cvar_train_withstds.pdf}
+        \caption{Evolution during training of CVaR$_{\alpha=0.1}$ of the cumulative rewards over 5 evaluation episodes.
+        Every point corresponds to one evaluation process performed every 1000 steps of training.For the plot we
+        show averaged values over 5 random seeds and 1 standard deviation}
+        \label{fig:cvar_cheetah}
+    
+\end{figure}
 
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/times_exceedvel_withstds.pdf}
-    \caption{Mean of number of times the maximum velocity was exceeded over 5 evaluation episodes.
+    \caption{Evolution during training of mean of number of times running over speed limit over 5 evaluation episodes.
     Every point corresponds to one evaluation process performed every 1000 steps of training.
-    For the plot we show averaged values over 5 random seeds and 1 std}
+    For the plot we show averaged values over 5 random seeds and 1 standard deviation}
     \label{fig:vel_exceed_cheetah}
 
 \end{figure}
@@ -88,8 +88,8 @@ Results are shown below.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{images/Cheetah_offpolicy_medium/hist_evaluation_numevalsteps200_500eps.pdf}
-    \caption{Comparison of cumulative rewards achieved with \textit{CVaR} and \textit{Mean}
-    over 500 evaluation episodes of 200 time steps each using the trained final policies.
+    \caption{Comparison of cumulative rewards achieved with \textit{CVaR} and \textit{Mean}.
+    Data was obtained by acting for 500 episodes of 200 timesteps each with the final policies after training.
     \textit{Mean} achieves an expected value  ($\mu=220.75)$  but 
     has a far lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=-131.77) compared to
     \textit{CVaR} ($\mu=238.18$ and $\text{CVaR}_{\alpha= 0.1}$=130.63)}
@@ -111,10 +111,9 @@ and an additional reward per every step for which the agents keep in a \textit{h
 A \textit{healthy} position is considered when the agent has an angle inclination and center of mass
 position constrained between some pre-defined values. Whenever this doesn't hold, the episode ends.
 
-\subsubsection{Dataset}
+\textbf{Dataset}\\
 We use the \textit{walker2d-expert-v0} dataset from D4RL, which consists of 1M samples of data generated by
-training to completion a policy online using a standard RL algorithm (soft actor-critic).
-
+training to completion a policy online using a standard RL algorithm (soft actor-critic).\\
 The environment is again deterministic, so to proof the performance of our algorithm, we modify the environment to
 add a source of uncertainty. We introduce stochasticity in the original cost function in a way that 
 makes the environment stochastic enough to have a meaningful assessment of risk in terms of 
@@ -125,13 +124,14 @@ A reward of $R_H=-100$ is given with probability 0.1, if the walker exits the \t
 Due to the fact that there is no direct access to the required information from the observations,
 we reran the environment interactions from the dataset in open-loop, to collect the desired information and 
 modify the rewards accordingly.
-The modified dataset was used to train the algorithm in an offline way.
+The modified dataset was used to train the algorithm in an offline way.\\
+
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
 Evaluation process is the same as for the cheetah environment.
 
-After training, we used the final policies and deployed them in the noisy environment for 500 episodes 
+After training we used the final policies and deployed them in the noisy environment for 500 episodes 
 1000 time steps each. An histogram of the resulting cumulative rewards is added below showing
 how the \textit{Mean} algorithm obtain in average higher rewards, but in some scenarios it 
 obtains really low results, whereas the \textit{CVaR} performs in average worse than \textit{Mean} 
@@ -144,7 +144,7 @@ Results are shown below.
     \includegraphics[width=0.8\textwidth]{images/Walker_offpolicy_expert/cvar_train_withstds.pdf}
     \caption{CVaR$_\alpha=0.1$ of the cumulative rewards over 5 evaluation episodes.
     Every point corresponds to one evaluation process performed every 1000 steps of training.For the plot we
-    show averaged values over 10 random seeds and 1 std}
+    show averaged values over 10 random seeds and 1 standard deviation}
     \label{fig:cvar_walker}
 
 \end{figure}
@@ -154,7 +154,7 @@ Results are shown below.
 \includegraphics[width=0.8\textwidth]{images/Walker_offpolicy_expert/mean_train_withstds.pdf}
 \caption{Mean of the cumulative rewards over 5 evaluation episodes. Every point corresponds
 to one evaluation process performed every 1000 steps of training.For the plot we
-show averaged values over 10 random seeds and 1 std}
+show averaged values over 10 random seeds and 1 standard deviation}
 \label{fig:mean_walker}
 
 \end{figure}

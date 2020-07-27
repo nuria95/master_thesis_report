@@ -105,7 +105,7 @@ probability of a penalization is low.
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
-Specifically, every 5 training episodes, we test the current policy over 500 evaluation episodes.
+Specifically, every 10 training episodes, we test the current policy over 500 evaluation episodes.
 During evaluation, we remove the exploration noise from the policy.
 During this 500 evaluation episodes, we compute the mean of the cumulative rewards (see Figure \ref{fig:mean_car}),
 the CVaR with a confidence level of 0.1  (see Figure \ref{fig:cvar_car}) and also the mean of the number of times the 
@@ -123,8 +123,8 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/mean_train_withstds.pdf}
         \caption{Evolution of mean of the cumulative rewards over 500 evaluation episodes.
         Every datapoint corresponds
-        to one evaluation process performed every 10 training episodes.For the plot we
-        show averaged values over 5 random seeds and 1 std}
+        to one evaluation process performed every 10 training episodes. For the plot we
+        show averaged values over 5 random seeds and 1 standard deviation}
         \label{fig:mean_car}
     
 \end{figure}
@@ -136,7 +136,7 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
         Every datapoint corresponds
         to one evaluation process performed every 10 training episodes.
         For the plot we
-        show averaged values over 5 random seeds and 1 std}
+        show averaged values over 5 random seeds and 1 standard deviation}
         \label{fig:cvar_car}
     
 \end{figure}
@@ -144,10 +144,10 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
 \begin{figure}[ht]
         \centering
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/times_exceedvel_withstds.pdf}
-        \caption{Evolution of number of times penalized velocity is exceeded.
+        \caption{Evolution of number of time steps driving over speed limit.
         Every datapoint corresponds
         to one evaluation process performed every 10 training episodes. For the plot we
-        show averaged values over 5 random seeds and 1 std}
+        show averaged values over 5 random seeds and 1 standard deviation}
         \label{fig:maxveltimes_car}
     
 \end{figure}
@@ -172,9 +172,9 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
         \textit{Mean} achieves a higher expected value  ($\mu=78.1)$  but 
         has a lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=12) compared to
         \textit{CVaR} ($\mu=60$ and $\text{CVaR}_{\alpha= 0.1}$=60).
-        Data was obtained by acting for 500 episodes with the trained policies.
+        Data was obtained by acting for 500 episodes with the final policies after training.
         Distribution of rewards for \textit{Mean} follows a binomial distribution B(n,p)
-        with n being the number of steps with a velocity higher than the penalized and 
+        with n being the number of time steps over the speed limit and 
         p the probability of penalization.}
         \label{fig:histogram_cvar_vs_mean}
     

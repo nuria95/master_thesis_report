@@ -1,12 +1,12 @@
 
 \section{Batch RL Setting}
 We test the performance of the $\thenameoff$ algorithm in a Batch RL setting.
-To this end, we make use of the D4RL datasets, specifically those  datasets from D4RL
+To this end, we make use of the D4RL datasets, specifically datasets from D4RL
 generated
-on a number of physical control tasks from the Gym toolkit developed under MuJoCo
-physics simulator \citep{Todorov2012}.
+on two different physical control tasks from the Gym toolkit developed under MuJoCo
+physics simulator \citep{Todorov2012}: \textit{HalfCheetah} and \textit{Walker2d}.
 
-\subsection{Half-Cheetah}
+\subsection{\textit{HalfCheetah}}
 We show results on the \textit{HalfCheetah} task.
 In the \textit{HalfCheetah} environment, a 2D cheetah robot needs to learn to run.
 The observation space has 17 dimensions, accounting for velocity and position of the joints.
@@ -29,7 +29,7 @@ we reran the environment interactions from the dataset in an open-loop way to co
 modify the rewards accordingly.
 The modified dataset was used to train the algorithm in an offline way.
 Only for the evaluation process, we allowed the agent to interact with the environment.
-We use the $\textit{HalfCheetah-v3}$ environment provided by the OpenAI Gym Toolkit, but modified with a 
+We use the $\textit{HalfCheetah-v3}$ environment from the OpenAI Gym Toolkit, but modified with a 
 \textit{RewardWrapper} to change the default reward function.\\
 
 
@@ -42,15 +42,16 @@ During this 5 evaluation episodes, we track the mean of the cumulative rewards (
 the CVaR with a confidence level of 0.1 (see Figure \ref{fig:cvar_cheetah}) and also the 
 mean of number of time steps running over the speed limit (see Figure \ref{fig:vel_exceed_cheetah}).\\
 We can see how \textit{Mean} converges to slightly higher
-expected value but far lower CVaR than \textit{CVaR} and that it leads to running over the speed limit for 
-a long amount of time while \textit{CVaR} learns
-in the very early stages of learning not to exceed it.
+expected value but far lower conditional value-at-risk than \textit{CVaR}.
+Additionally, under \textit{Mean} the cheetah runs over the speed limit in many times
+while \textit{CVaR} learns not to exceed it already
+in the very early stages of learning.
 
-After training, we used the final policies and deployed them in the noisy environment for 500 episodes 
+After training we used the final policies and deployed them in the noisy environment for 500 episodes 
 200 time steps each. A histogram of the resulting cumulative rewards shows
 how the \textit{Mean} algorithm obtains, in average, higher rewards, but in some scenarios it 
 obtains really low results, whereas the \textit{CVaR} performs in average worse than \textit{Mean} 
-but the conditional value at risk is higher than for the \textit{Mean} (see Figure \ref{fig:hist_cum_rewards200steps_cheetah}).
+but the conditional value-at-risk is higher than for the \textit{Mean} (see Figure \ref{fig:hist_cum_rewards200steps_cheetah}).
 
 
 
@@ -91,52 +92,68 @@ but the conditional value at risk is higher than for the \textit{Mean} (see Figu
     \caption{Comparison of cumulative rewards achieved with \textit{CVaR} and \textit{Mean}.
     Data was obtained by acting for 500 episodes of 200 timesteps each with the final policies after training.
     \textit{Mean} achieves an expected value  ($\mu=220.75)$  but 
-    has a far lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=-131.77) compared to
+    has a far lower conditional value-at-risk ($\text{CVaR}_{\alpha= 0.1}$=-131.77) compared to
     \textit{CVaR} ($\mu=238.18$ and $\text{CVaR}_{\alpha= 0.1}$=130.63)}
     \label{fig:hist_cum_rewards200steps_cheetah}
 \end{figure}
 
 \clearpage
 
-\subsection{Walker}
+\subsection{\textit{Walker2d}}
 
 We show results on the \textit{Walker2d} task.
-In the \textit{Walker2d} environment, a two-dimensional bipedal robot needs to learn walk forward
+In the \textit{Walker2d} environment, a two-dimensional bipedal robot needs to learn to walk forward
 as fast as possible.
-The observation space has 17 dimensions (accounting for velocity and position of the joints)
+The observation space has 17 dimensions (accounting for velocity and position of the joints).
 The control space has a dimensionality of 6, constrained between -1 and 1, 
 controlling the torques applied to the joints.
-The reward received per step is a function of the control cost, the velocity of the agent and 
-and an additional reward per every step for which the agents keep in a \textit{healthy} position.
-A \textit{healthy} position is considered when the agent has an angle inclination and center of mass
+The reward received every time step is a function of the control cost, the velocity of the agent and 
+and an additional reward every time step the agent keep in a \textit{healthy} position.
+A position is considered to be \textit{healthy} when the agent has an angle inclination and center of mass
 position constrained between some pre-defined values. Whenever this doesn't hold, the episode ends.
 
 \textbf{Dataset}\\
-We use the \textit{walker2d-expert-v0} dataset from D4RL, which consists of 1M samples of data generated by
+We use the \textit{walker2d-expert-v0} dataset from D4RL which consists of 1M samples of data generated by
 training to completion a policy online using a standard RL algorithm (soft actor-critic).\\
-The environment is again deterministic, so to proof the performance of our algorithm, we modify the environment to
+The environment is deterministic so to proof the performance of our algorithm, we modify the environment to
 add a source of uncertainty. We introduce stochasticity in the original cost function in a way that 
 makes the environment stochastic enough to have a meaningful assessment of risk in terms of 
 tail performance.
-In this case, a \textit{robust healthy} range is defined, defining a more constrained subset of the \textit{healthy} range.
+In this case, we specify a \textit{robust healthy} range, a subset of \textit{healthy} range.
 A reward of $R_H=-100$ is given with probability 0.1, if the walker exits the \textit{robust healthy} space.
 
 Due to the fact that there is no direct access to the required information from the observations,
-we reran the environment interactions from the dataset in open-loop, to collect the desired information and 
+we reran the environment interactions from the dataset in an open-loop way to collect the desired information and 
 modify the rewards accordingly.
-The modified dataset was used to train the algorithm in an offline way.\\
-
+The modified dataset was used to train the algorithm in an offline way.
+Only for the evaluation process, we allowed the agent to interact with the environment.
+We use the $\textit{Walker2d-v3}$ environment from the OpenAI Gym Toolkit, but modified with a 
+\textit{RewardWrapper} to change the default reward function.\\
 
 In the following we show the evaluation during training for both \textit{Mean} and
 \textit{CVaR}.
-Evaluation process is the same as for the cheetah environment.
+Specifically, every 1000 training steps we evaluate the current policy for 5 episodes.
+During evaluation, to ensure the deterministic nature of the policy
+the latent vector $z$ is not sampled from a Gaussian, but a vector of zeros is used instead.
+During this 5 evaluation episodes, we track the mean of the cumulative rewards (see Figure \ref{fig:mean_walker}),
+the CVaR with a confidence level of 0.1 (see Figure \ref{fig:cvar_walker}) and also the 
+mean of number of time steps where the cheetah orientation doesn't lie in the robust healthy space (see Figure \ref{fig:vel_exceed_walker}).\\
+In this case, we can see that \textit{CVaR} outperforms \textit{Mean} in both expected value and conditional value-at-risk
+and this happens at all stages of training.
+Regarding the number of times the agent orientation doesn't lie in the robust healthy space,
+we cannot see much difference during early stages of training but at the end,
+\textit{CVaR} shows a clear decrease, although it is not that substantial.
+This outperformance could be explained by the fact that \textit{CVaR} preventing the low probability 
+penalizations, i.e. preventing the walker
+to exit the
+robust healthy space, will help subsequently in preventing the walker to fall forward or backwards.
+Hence, leading to better policies with respect to both mean and conditional value-at-risk. 
 
 After training we used the final policies and deployed them in the noisy environment for 500 episodes 
-1000 time steps each. An histogram of the resulting cumulative rewards is added below showing
-how the \textit{Mean} algorithm obtain in average higher rewards, but in some scenarios it 
-obtains really low results, whereas the \textit{CVaR} performs in average worse than \textit{Mean} 
-but the conditional value at risk is higher than for the \textit{Mean}.
-Results are shown below.
+1000 time steps each. A histogram of the resulting cumulative rewards shows
+how the \textit{CVaR} algorithm outperfoms \textit{Mean} in both expected value and conditional value-at-risk,
+although differences are not that substantial. \ref{fig:hist_cum_rewards_walker})
+
 
 \begin{figure}[ht]
     \centering
@@ -178,8 +195,8 @@ Results are shown below.
 \includegraphics[width=0.8\textwidth]{images/Walker_offpolicy_expert/hist_evaluation_numevalsteps1000.pdf}
 \caption{Comparison of cumulative rewards achieved with \textit{CVaR} and \textit{Mean}
 over 500 evaluation episodes of 1000 time steps each using the trained final policies.
-\textit{Mean} achieves a slightly lower expected value ($\mu=2739.47)$ but 
-has a lower CVAR ($\text{CVaR}_{\alpha= 0.1}$=67.54) compared to
+\textit{Mean} achieves a slightly lower expected value ($\mu=2739.47)$ and 
+has a lower conditional value-at-risk ($\text{CVaR}_{\alpha= 0.1}$=67.54) compared to
 \textit{CVaR} ($\mu=2922.56$ and $\text{CVaR}_{\alpha= 0.1}$=235.74)}
 \label{fig:hist_cum_rewards_walker}
 \end{figure}

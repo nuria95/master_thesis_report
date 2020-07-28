@@ -112,9 +112,10 @@ the CVaR with a confidence level of 0.1  (see Figure \ref{fig:cvar_car}) and als
 driving over the
 speed limit (see Figure \ref{fig:maxveltimes_car}). \\
 We can see how \textit{Mean} converges to slightly higher
-expected value but lower CVaR than \textit{CVaR} and that it leads to driving over the speed limit for 
-a long amount of time while \textit{CVaR} learns
-in the very early stages of learning not to exceed it.\\
+expected value but lower CVaR than \textit{CVaR}. 
+Additionally, under \textit{Mean} the car learns to drive over the speed limit for 
+a long amount of time while \textit{CVaR} learns not to exceed it already
+in the very early stages of learning.\\
 The Figures also show that \textit{Mean} takes longer to converge than \textit{CVaR}, with a very high standard deviation
 until the very end due to some episodes in the evaluation process for which the car doesn't reach the goal and keeps accumulating
 $R_{k}$ penalizations. This suggests that in some scenarios the fact of reducing high penalization outcomes,

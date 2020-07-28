@@ -2,7 +2,7 @@
 \label{sec:problem_description}
 \section{Problem description}
 
-Standard RL approaches aim to find policies which maximize the expected cumulative reward.
+Standard RL algorithms aim to find policies which maximize the expected cumulative reward.
 However, this approach neither takes into account variability of the reward around its mean
 neither sensitivity of the policy to modelling errors.\\
 In this thesis, we change the objective function of the
@@ -34,7 +34,7 @@ An MDP is defined by a tuple ($\mathcal{S,A},R,P,\gamma$), where $\mathcal{S,A}$
 state and action spaces respectively, $R(x,a)$ is the reward distribution, $P(\cdot |x,a)$ is
 the transition probability distribution and $\gamma \in [0,1]$ is the discount factor. 
 
-State transitions of an MDP satisfy the Markov property in which
+The state transitions of an MDP satisfy the Markov property in which
 the set of transition probabilities to next states depend only on the current state and action of the system
 but are conditionally independent of all previous states and actions. Hence, the state must
 provide information about all aspects of the past agent-environment interaction that
@@ -64,8 +64,6 @@ policy lies in the class of stationary Markovian policies $\Pi_{M,S}$
 When dealing with other types of objective functions that aim towards more risk-sensitive
 policies, these nice properties don't normally hold
 and require extra mathematical formulations, such as MDP state augmentation \citep{Chow2015}.
-
-
 
 \section{Risk}
 When aiming to maximize the expected cumulative reward the shape of the reward distribution might be unimportant

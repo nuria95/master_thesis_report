@@ -51,7 +51,7 @@ learns same policy as for setting 1, whereas \textit{CVaR} evolves to a
 risk-sensitive policy and learns same policy as in setting 2
 to ensure high penalizations do not occur.
 \subsection{Setting 1: No velocity penalization}
-Car arrives at the goal position with maximum acceleration throughout the whole episode
+The car arrives at the goal position with maximum acceleration throughout the whole episode
 for both \textit{Mean} and \textit{CVaR}.
 Car keeps an acceleration of $\SI{1}{\metre\per\square\ts}$ for the whole episode and hence reaches $x_F=2.5$\si{\metre} in 24 time steps.
 Hence the final cumulative reward $G_T= (24-1) R_{k} + R_{F}=140$.
@@ -60,7 +60,7 @@ Hence the final cumulative reward $G_T= (24-1) R_{k} + R_{F}=140$.
         \centering
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/Trajectory_nopenal.pdf}
         \caption{States and control evolution during evaluation without velocity penalization. 
-         Learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
+         The learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
         \label{fig:traj1_nopenal}
     
 \end{figure}
@@ -89,7 +89,7 @@ $G_T= (24-1)R_{k} + (21-1)R_{v} + R_{F} << (31-1) R_{k} + R_{F}=70$
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/Trajectory_penal.pdf}
         \caption{States and control evolution during evaluation with velocity penalization
         with probability 1.
-        Learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
+        The learnt policy is the same for both \textit{Mean} and \textit{CVaR}}
         \label{fig:traj1_penal1}
     
 \end{figure}
@@ -167,7 +167,7 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
         \includegraphics[width=0.8\textwidth]{images/Car/CVAR/Trajectory_withstds_penal.pdf}
         \caption{States and control evolution during evaluation with velocity penalization
         with probability 0.2.
-        Learnt policies by \textit{Mean} and \textit{CVaR} differ, \textit{CVaR} leading
+        The learnt policies by \textit{Mean} and \textit{CVaR} differ, \textit{CVaR} leading
         towards risk-averse behavior}
         \label{fig:traj_probpenal0.2}
     
@@ -182,8 +182,8 @@ but the conditional value-at-risk is higher than for the \textit{Mean} (see Figu
         \textit{Mean} achieves a higher expected value  ($\mu=78.1)$  but 
         has a lower CVaR ($\text{CVaR}_{\alpha= 0.1}$=12) compared to
         \textit{CVaR} ($\mu=60$ and $\text{CVaR}_{\alpha= 0.1}$=60).
-        Data was obtained by acting for 500 episodes with the final policies after training.
-        Distribution of rewards for \textit{Mean} follows a binomial distribution B(n,p)
+        The data was obtained by acting for 500 episodes with the final policies after training.
+        The distribution of rewards for \textit{Mean} follows a binomial distribution B(n,p)
         with n being the number of time steps over the speed limit and 
         p the probability of penalization.}
         \label{fig:histogram_cvar_vs_mean}

@@ -1,14 +1,18 @@
 {
     "cSpell.words": [
+        "acerbi",
         "autoencoder",
         "backpropagation",
         "halfcheetah",
         "markovian",
         "mdps",
         "minibatch",
+        "pseudocode",
         "stochasticity"
     ],
     "cSpell.ignoreWords": [
+        "acerbi",
+        "acerbi's",
         "mygray",
         "textcolor"
     ]

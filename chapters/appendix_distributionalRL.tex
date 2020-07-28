@@ -1,13 +1,13 @@
 \chapter{}\label{chap:appendix_distRL}
 \section{Distributional RL} 
 
-In contrast to standard RL, where we model the expected return, in distributional RL, we aim
+In contrast to standard RL where we model the expected return, in distributional RL we aim
 to model the full distribution of the return, i.e the \textit{value distribution}.
 \citet{Bellemare2017,Dabney2018a,Dabney2018b} presented different algorithms for distributional RL
 and they argued the advantages of learning the whole distribution
-even when we want to optimize the expected value, as the distribution can give us more information that
+even when we want to optimize the expected value, since the distribution can give us more information that
 can be beneficial to learn function approximations.
-Its advantage becomes more obvious when designing risk-sensitive algorithms that aim 
+Its advantages become more obvious when designing risk-sensitive algorithms that aim 
 to reduce probability of
 certain outcomes.
 
@@ -25,24 +25,24 @@ It follows:
     Q^\pi(x,a) = \mathbb E[Z^\pi(x,a)]
 \end{equation}
 
-Similarly than Q-value \ref{eq:bellman1}, Z is also described by a recursive equation, 
+Similarly than Q-value \ref{eq:bellman1}, Z is also described by a recursive equation
 but of a distributional nature: 
 \begin{eqnarray}
     Z^\pi(x,a) \stackrel{D}{=} R(x,a) + \gamma Z(x',a') \label{eq:distrbellman}
 \end{eqnarray}
 where $x'\backsim\ p(\cdot|x,a) \text{ and } a' \backsim\ \pi(\cdot |x')$ and $\stackrel{D}{=}$ 
-denotes that the RV on both sides of the equation share the same
+denotes that the random variables on both sides of the equation share the same
 probability distribution.\\
-The \textit{distributional Bellman equation} defined in \eqref{eq:distrbellman}, states
+The \textit{distributional Bellman equation} defined in \eqref{eq:distrbellman} states
 that the distribution of 
 Z is characterized by the interaction of 3 random variables, the random reward R, the next
 state-action (x',a') and its random return 
 Z(x',a'). From here on, we will view $Z^\pi$ as a mapping from state-action pairs to
 distributions over
-returns, and we call this distribution the \textit{value distribution}.
+returns, and we call this distribution the \textit{action-value distribution}.
 
-In the policy evaluation setting \cite{Sutton1998}, one aims to find the value $V^\pi(x)$ or $Q^\pi(x,a)$ 
-function associated with a given fixed policy $\pi$. In the distributional case, we aim to find $Z^\pi$.
+In the policy evaluation setting \citep{Sutton1998} one aims to find the value $V^\pi(x)$ or $Q^\pi(x,a)$ 
+function associated with a given fixed policy $\pi$. In the distributional case we aim to find $Z^\pi$.
 
 We view the reward function as a random vector R $\in \mathbb{Z}$ and define the transition
 operator 
@@ -62,7 +62,7 @@ mapping in Wasserstein metric whose unique fixed point is the
 random return $Z^\pi$.
 
 \subsubsection{Wasserstein metric:}
-The p-Wasserstein metric $W_p$, for $p \in [1,\infty]$, also known as the Earth Mover's 
+The p-Wasserstein metric $W_p$ for $p \in [1,\infty]$, also known as the Earth Mover's 
 Distance when $p=1$, is an integral probability metric between distributions. The
 p-Wasserstein distance is characterized 
 as the $L^p $ metric on inverse cumulative distribution functions. That is, the
@@ -70,7 +70,6 @@ p-Wasserstein metric between distributions $U $ and $Y $ is given by:
 \begin{equation}
     W_p(U,Y) = \big (  \int_{0}^{1} | F_Y^{-1}(w) - F_U^{-1}(w) |^p dw   \big )^{\frac{1}{p}} \label{eq:wasserstein}
 \end{equation}
-
 where for a random variable Y, the inverse CDF $F_Y^{-1}$ of Y is defined by:
 \begin{equation}
     F_Y^{-1}(w) \coloneqq \text{inf} \big\{ y \in \mathbb{R} \; | w \; \leq   F_Y(w)    \big\}
@@ -80,7 +79,7 @@ where $F_Y(w) = Pr(y \leq Y)$. \\
 of the random variables U and Y.
 \ref{fig:wasserstein} illustrates the 1-Wasserstein distance as the area between two cumulative distribution
 functions.
-Unlike the Kullback-Leibler divergence , the Wasserstein metric is a true probability
+Unlike the Kullback-Leibler divergence, the Wasserstein metric is a true probability
 metric and considers both the probability of
 and the distance between various outcome events, which makes it well-suited to domains 
 where an underlying similarity in outcome is more important than exactly matching likelihoods.
@@ -89,7 +88,7 @@ where an underlying similarity in outcome is more important than exactly matchin
     \centering
     \includegraphics[width=0.8\textwidth]{images/wasserstein.png}
     \caption{Illustration of 1-Wasserstein distance as the area between 2 cumulative distribution
-    functions.Shaded regions sum to form the 1-Wasserstein error. Source: \citet{Dabney2018a}}
+    functions. Shaded regions sum to form the 1-Wasserstein error. Source: \citet{Dabney2018a}}
     \label{fig:wasserstein}
 
 \end{figure}
@@ -107,21 +106,21 @@ i.e. for any two $Z_1, Z_2 \in \mathcal{Z}$,
 \begin{equation}
     \hat{d}_p(T^\pi Z_1, T^\pi Z_2) \leq \gamma \hat{d}_p(Z_1,Z_2)
 \end{equation}
-
 Using Banach's fixed point theorem, we can conclude that $T^\pi$ has a unique fixed point,
 which by inspection must be $Z^\pi$.
 
-Hence the $\hat{d}_p$ metric is shown to be useful metric for studying behavior of
-distributional RL algorithms, and to showed their convergence to a fixed point.
-Moreover, shows than en effective way to learn a value distribution is to attempt minimize
-the Wasserstein distance between a distribution Z and its distributional Bellman update
+Hence the $\hat{d}_p$ metric is shown to be a useful metric for studying behavior of
+distributional RL algorithms and to show their convergence to a fixed point.\\
+Moreover,  \cite{Bellemare2017} showed that $\hat{d}_p$ can be used to learn a value distribution
+by minimizing the Wasserstein distance between a distribution Z and its distributional Bellman update
 $T^\pi Z$, analogously to the way that TD-learning attempts to iteratively minimize
 the $L^2$ distance between Q and $TQ$.
 
 \subsection{Distributional Bellman Optimality Operator $\mathcal{T}$}
 We have so far considered a policy evaluation setting and we studied
 the behavior of its associated distributional operator $T^\pi$.
-We now move to the control setting, where we aim to find a policy $\pi^{*}$ that optimizes the value and the 
+We now move to the control setting where we aim to find a policy $\pi^{*}$ that optimizes the value function
+and the 
 corresponding distribution.
 
 While all optimal policies attain the same value $Q^{*}$, in general there are
@@ -139,14 +138,13 @@ As in the policy evaluation setting, we are interested in the behavior of the it
 $Z_{k+1} := \mathcal{T}Z_k, Z_0 \in \mathcal{Z}$.
 \citet{Bellemare2017} shows that the distributional analogue of the Bellman optimality operator converges, in a weak sense,
 to the set of optimal value distributions, but
-this operator is \textit{not a contraction in any metric between distributions.}.\\
-
-Another result, shows that we cannot in general minimize the Wasserstein metric, 
+this operator is \textit{not a contraction in any metric between distributions}.\\
+Another result from \citet{Bellemare2017} shows that we cannot in general minimize the Wasserstein metric, 
 viewed as a loss, using stochastic gradient descent methods. This limitation, is crucial
-in a practical context, when the value distribution needs to be approximated.
+in a practical context when the value distribution needs to be approximated.
 
 \subsection{Quantile approximation} \label{sec:appendix_quantile_approximation}
-\cite{Dabney2018a} used the theory of quantile regression \cite{koenker2005}, to
+\cite{Dabney2018a} used the theory of quantile regression \cite{koenker2005} to
 design an algorithm applicable in a stochastic approximation setting.
 Quantile regression is used to estimate the quantile function at precisely chosen points.
 Then the Bellman update is applied onto this parameterized quantile distribution.
@@ -156,8 +154,8 @@ is shown to converge to the true value distribution when minimized using stochas
 \subsubsection{Quantile projection}
 We aim to estimate the quantiles of the value distribution, i.e. the values 
 of the return that divide the value distribution in equally sized parts.
-We call it quantile distribution.
-We let $\mathcal{Z_Q}$ be the space of quantile distributions.
+We call it quantile distribution and 
+we let $\mathcal{Z_Q}$ be the space of quantile distributions.
 We denote the cumulative probabilities associated with such a distribution, known as
 quantile levels, by $\tau_1,\tau_2...\tau_N$,
 so that $\tau_i=\frac{i}{N}$ for $i=1,...N$.\\
@@ -172,19 +170,16 @@ with each $\theta_i$ assigned a fixed quantile.\\
 We aim to learn the support of these Diracs, i.e. learn $\theta_i \; \forall (i, a, x)$ triplet.
 We will do it by quantifying the projection of an arbitrary value distribution $Z \in \mathcal{Z}$
 onto $\mathcal{Z_Q}$, that is:
-
 \begin{equation}
     \prod{}_{W_1} Z \coloneqq  \underset{Z_\theta \in \mathcal{Z_Q}}{\arg \min } W_1(Z,Z_\theta)
 \end{equation}
-
 This projection $\prod_ {W_1}$ is the quantile projection.
-We can quantify the projection between Y and U, a uniform distribution
-over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta_N\}$ by:
+We can quantify the projection between distribution Y and U, a uniform distribution
+over N Diracs as in \eqref{eq:discrete_pdf} with support $\{\theta_1, ... \theta_N\}$, by:
 \begin{equation}
     W_1(Y,U)= \sum_{i=1}^{N}\int_{\tau_{i-1}}^{\tau_i} |   F_Y^{-1}(w)-\theta_i   |dw
 \end{equation}
-
-Lemma 2 in \cite{Dabney2018a} \label{par:lemma2_dabney} shows that the set of values $\{\theta_1, ... ,\theta_N\}$ that minimize:
+Lemma 2 in \cite{Dabney2018a} \label{par:lemma2_dabney} shows that the set of values $\{\theta_1, ... ,\theta_N\}$ that minimize
 $W_1(Y,U)$ are given by $\theta_i = F_Y^{-1}(\hat\tau_i)$, where $\hat\tau_i=\frac{\tau_{i-1}+\tau_i}{2}$.
 Figure \ref{fig:wasserstein} shows the projection $\Pi_{W_1}Z$ of the function $Z$ onto $\mathcal{Z_Q}$ minimizing
 the 1-Wasserstein distance to Z.\\
@@ -194,23 +189,21 @@ Quantile regression is a method for approximating quantile functions of a distri
 The quantile regression loss for quantile $\tau \in [0,1]$ is an asymmetric convex lox function
 that penalizes underestimation errors with weight $\tau$ and overestimation errors
 with weight $1-\tau$. \\
-For a distribution Z, and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
+For a distribution Z and given quantile $\tau$, the value of the quantile function $F_Z^{-1}(\tau)$
 may be characterized as the minimizer of the quantile regression loss:
 \begin{align}
     \mathcal{L}_{QR}^{\tau}(\theta)=\mathbb E_{\hat{Z}\backsim Z}[\rho_\tau(\hat{Z}-\theta) ] \label{eq:quantile_loss}\\
     \rho_\tau(u)=u(\tau - \mathds{1}_{\{u<0\}}) \quad \forall u \in \mathbb{R} \nonumber
 \end{align}
-Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$, and 
-using Lemma 2 in \cite{Dabney2018a},\ref{par:lemma2_dabney} that claims that the values 
+Given that the minimizer of the quantile regression loss for $\tau$ is $F_Z^{-1}(\tau)$ and 
+using Lemma 2 in \citet{Dabney2018a} (\ref{par:lemma2_dabney}) that claims that the values 
 of $\{\theta_1, ... \theta_N\}$ that minimize
- $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$; we have that the set of minimizing
+ $W_1(Z,Z_\theta)$ are given by $\theta_i = F_Y^-1(\hat\tau_i)$, we have that the set of minimizing
  values $\{\theta_1, ... \theta_N\}$ for  $W_1(Z,Z_\theta)$ are the minimizers of the 
  following objective:
-
 \begin{equation}
     \sum_{i=1}^{N} \mathbb E_{\hat{Z} \sim Z} [ \rho_{\hat\tau_i}(\hat{Z}-\theta_i)]
 \end{equation}
-
 This loss gives unbiased sample gradients and hence, we can find the minimizing $\{\theta_1, ... \theta_N\}$
 by stochastic gradient descent.
 
@@ -222,43 +215,48 @@ by stochastic gradient descent.
 \end{figure}
 
 Proposition 2 in \cite{Dabney2018a} states that the combined quantile projection 
-$\prod_{W_1}$ with the Bellman update $\mathcal{T}^\pi$ has a unique fixed point $\hat{Z}^\pi$, and the repeated application
+$\prod_{W_1}$ with the Bellman update $\mathcal{T}^\pi$ has a unique fixed point $\hat{Z}^\pi$ and the repeated application
 of this operator, or its stochastic approximation, converges to $\hat{Z}^\pi$.
 
 \subsection{Quantile Regression Temporal Difference Learning}
+\citet{Dabney2018a} presents a complete algorithmic approach to distributional RL consistent
+with previous theoretical results to approximate the value distribution with a parameterized quantile
+distribution over a set of quantile points and training the location parameters via quantile regression.
 Temporal difference learning updates the estimated value function with a single unbiased 
 sample following policy $\pi$.
-Quantile regression allows to improve the estimate of the quantile function for some target
-distribution Y(x), by observing samples $y\sim Y(x)$ and minimizing equation \eqref{eq:quantile_loss}.
-Using the quantile regression loss, we can obtain an approximation with minimal 1-Wasserstein distance
-from the original.
-We can combine this with the distributional Bellman operator to give a target distribution
-for quantile regression, creating the quantile regression temporal difference learning algorithm:
-
+Quantile regression obtains an approximation with minimal 1-Wasserstein distance
+from the true quantile function by observing samples $y\sim Y(x,a)$ and minimizing equation \eqref{eq:quantile_loss}.\\
+\textit{Quantile regression temporal difference learning algorithm} combines this with the distributional Bellman operator to estimate the target distribution
+for quantile regression:
 \begin{eqnarray}
     u=r+\gamma z' - \theta_i(x)\\
     \theta_i(x) \la \theta_i(x) + \alpha (\hat\tau_i - \mathds{1}_{\{u<0\}})\\
     a \backsim \pi(\cdot |x) , r \backsim R(x,a), x'\backsim P(\cdot |x,a), z' \backsim Z_\theta(x')
 \end{eqnarray}
-
 where $Z_\theta$ is a quantile distribution as in \eqref{eq:discrete_pdf} and $\theta_i(x)$ 
-is the estimated value of $F_{Z^\pi(x)}^{-1}(\hat\tau_i)$ in state x.
+is the estimated value of $F_{Z^\pi(x)}^{-1}(\hat\tau_i)$ for state $x$.
 
 
 \subsection{Implicit quantile networks}
-In this thesis, we represent the quantile distribution slightly different than
-\eqref{eq:discrete_pdf}. We use  implicit quantile network (IQN), a deterministic
-parametric function trained to reparameterize samples from a base distribution eg $\tau \in U([0,1])$ 
-to the respective quantile values of a target distribution. This network is presented in \citet{Dabney2018b}.
-Hence, in this case, we do not learn the distribution at uniformly separated
-quantile levels $\tau_i$ ($i \in \{1,N\}$) but, the quantile level $\tau$ is now an
+In this thesis we represent the quantile distribution slightly different than
+\eqref{eq:discrete_pdf}. We use an implicit quantile network (IQN) instead, a deterministic
+parametric function trained to reparameterize samples from a base distribution e.g. $\tau \sim U([0,1])$ 
+to the respective quantile values of a target distribution, as presented in \citet{Dabney2018b}.\\
+Hence, in this case we do not learn the distribution at uniformly separated
+quantile levels $\tau_i$ ($i \in \{1,N\}$) but the quantile level $\tau$ is now an
 input to the network instead.
-Despite the difference in the parameterization, approach followed is the same as described
+Despite the difference in the parameterization, the followed approach is the same as described
 in previous sections.\\
 However, as discussed by the IQN authors \citep{Dabney2018b}, the contraction mapping
 results for fixed grid of quantiles given in \citet{Dabney2018b} is not proven yet to extend 
 to this more general class of approximate quantile functions.
 Empirical performance success still motivates the use of the approach.\\
+We also note that we slightly modify the IQN network as presented in \citet{Dabney2018b} to adapt it
+to the continuous setting. To this end, we add an extra input to the network, namely action $a$, so the output
+of the network is an approximation of $Z(x,a; \tau)$ for every triplet ($x,a,\tau$), instead of 
+outputting $n$ action-values, one for each action $a$ where $n$ is the number of
+possible discrete actions in the environment.
+
 Curious readers are encouraged to read the papers \citet{Bellemare2017,Dabney2018a,Dabney2018b}
 for more information about the distributional RL approach.
 

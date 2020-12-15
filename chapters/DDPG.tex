@@ -157,8 +157,8 @@ used to represent the quantile function at specific quantile levels.
 As in \citet{Dabney2018b},we train the IQN critic using the sampled quantile regression
 loss \citep{koenker2005} on the pairwise temporal-difference (TD)-errors.\\
 Quantile regression $\rho_{\tau}(u)$ is a method for approximating quantile functions of a distribution at specific points.
-Quantile regression loss for quantile $\tau \in [0,1]$ is an asymmetric convex lox function
-that penalizes underestimation errors (u$<$0) with weight $1-\tau$ and underestimation
+Quantile regression loss for quantile $\tau \in [0,1]$ is an asymmetric convex loss function
+that penalizes overestimation errors (u$<$0) with weight $1-\tau$ and underestimation
 errors (u$>$0) with weight $\tau$. See figure \ref{fig:quantile_loss} for a graphical representation. 
 
 For two samples $\tau, \tau' \sim U([0,1])$, current policy $\pi$ (parameterized by $\theta^\pi$) and
